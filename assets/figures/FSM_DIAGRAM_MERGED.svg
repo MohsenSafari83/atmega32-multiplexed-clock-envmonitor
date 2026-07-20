@@ -1,0 +1,180 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 690" font-family="Consolas, 'Courier New', monospace">
+  <defs>
+    <marker id="ah" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#555"/>
+    </marker>
+    <marker id="ah-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#1565C0"/>
+    </marker>
+    <marker id="ah-red" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#C62828"/>
+    </marker>
+    <marker id="ah-orange" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#E65100"/>
+    </marker>
+    <marker id="ah-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#2E7D32"/>
+    </marker>
+
+    <linearGradient id="g-time" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#42A5F5"/><stop offset="100%" style="stop-color:#1565C0"/>
+    </linearGradient>
+    <linearGradient id="g-temp" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#66BB6A"/><stop offset="100%" style="stop-color:#2E7D32"/>
+    </linearGradient>
+    <linearGradient id="g-fahr" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFB74D"/><stop offset="100%" style="stop-color:#E65100"/>
+    </linearGradient>
+    <linearGradient id="g-hum" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#AB47BC"/><stop offset="100%" style="stop-color:#6A1B9A"/>
+    </linearGradient>
+    <linearGradient id="g-edit" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#EF5350"/><stop offset="100%" style="stop-color:#B71C1C"/>
+    </linearGradient>
+    <linearGradient id="g-cursor" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FF8A65"/><stop offset="100%" style="stop-color:#BF360C"/>
+    </linearGradient>
+
+    <filter id="shadow" x="-5%" y="-5%" width="115%" height="115%">
+      <feDropShadow dx="2" dy="3" stdDeviation="3" flood-opacity="0.2"/>
+    </filter>
+  </defs>
+
+  <!-- background -->
+  <rect width="1000" height="690" fill="#FAFAFA" rx="6"/>
+
+  <!-- title -->
+  <text x="500" y="35" text-anchor="middle" font-size="16" font-weight="bold" fill="#333" font-family="Segoe UI, Arial, sans-serif">ATmega32 — FSM / Workflow Diagram</text>
+
+  <!-- ====== INT0 CYCLE (top) ====== -->
+
+  <!-- MODE_TIME -->
+  <rect x="130" y="75" rx="10" ry="10" width="155" height="46" fill="url(#g-time)" filter="url(#shadow)"/>
+  <text x="207" y="93" text-anchor="middle" font-size="12" font-weight="bold" fill="#fff">MODE_TIME</text>
+  <text x="207" y="111" text-anchor="middle" font-size="9" fill="#E3F2FD">HH:MM:SS display</text>
+
+  <!-- MODE_TEMP -->
+  <rect x="350" y="75" rx="10" ry="10" width="155" height="46" fill="url(#g-temp)" filter="url(#shadow)"/>
+  <text x="427" y="93" text-anchor="middle" font-size="12" font-weight="bold" fill="#fff">MODE_TEMP</text>
+  <text x="427" y="111" text-anchor="middle" font-size="9" fill="#E8F5E9">value + 'C'</text>
+
+  <!-- MODE_FAHR -->
+  <rect x="570" y="75" rx="10" ry="10" width="155" height="46" fill="url(#g-fahr)" filter="url(#shadow)"/>
+  <text x="647" y="93" text-anchor="middle" font-size="12" font-weight="bold" fill="#fff">MODE_FAHR</text>
+  <text x="647" y="111" text-anchor="middle" font-size="9" fill="#FFF3E0">value + 'F'</text>
+
+  <!-- MODE_HUM -->
+  <rect x="790" y="75" rx="10" ry="10" width="155" height="46" fill="url(#g-hum)" filter="url(#shadow)"/>
+  <text x="867" y="93" text-anchor="middle" font-size="12" font-weight="bold" fill="#fff">MODE_HUM</text>
+  <text x="867" y="111" text-anchor="middle" font-size="9" fill="#F3E5F5">value + 'H'</text>
+
+  <!-- INT0 arrows -->
+  <path d="M 285 98 L 340 98" stroke="#555" stroke-width="2" marker-end="url(#ah)" fill="none"/>
+  <text x="312" y="89" text-anchor="middle" font-size="10" fill="#555" font-weight="bold">INT0</text>
+
+  <path d="M 505 98 L 560 98" stroke="#555" stroke-width="2" marker-end="url(#ah)" fill="none"/>
+  <text x="532" y="89" text-anchor="middle" font-size="10" fill="#555" font-weight="bold">INT0</text>
+
+  <path d="M 725 98 L 780 98" stroke="#555" stroke-width="2" marker-end="url(#ah)" fill="none"/>
+  <text x="752" y="89" text-anchor="middle" font-size="10" fill="#555" font-weight="bold">INT0</text>
+
+  <!-- HUM → TIME return (symmetrical curve under the row) -->
+  <path d="M 867 121 C 867 195, 207 195, 207 126"
+        stroke="#1565C0" stroke-width="2" stroke-dasharray="6,3" fill="none" marker-end="url(#ah-blue)"/>
+  <text x="500" y="200" text-anchor="middle" font-size="10" fill="#1565C0" font-weight="bold">INT0</text>
+
+  <!-- temp_request note -->
+  <text x="500" y="225" text-anchor="middle" font-size="9" fill="#1565C0">temp_request = 1 on every INT0 → immediate UART request</text>
+
+  <!-- ====== INT1 BRANCH (center) ====== -->
+
+  <!-- connector line TIME → EDIT -->
+  <line x1="207" y1="121" x2="207" y2="275" stroke="#C62828" stroke-width="3" stroke-dasharray="8,4"/>
+  <text x="220" y="200" font-size="10" fill="#C62828" font-weight="bold">INT1</text>
+  <line x1="207" y1="275" x2="290" y2="275" stroke="#C62828" stroke-width="3"/>
+  <polygon points="290,275 275,268 275,282" fill="#C62828"/>
+
+  <!-- ====== EDIT MODE (center) ====== -->
+  <rect x="290" y="245" rx="12" ry="12" width="380" height="44" fill="url(#g-edit)" filter="url(#shadow)" stroke="#B71C1C" stroke-width="2"/>
+  <text x="480" y="263" text-anchor="middle" font-size="13" font-weight="bold" fill="#fff">EDIT MODE  (clock_edit = 1)</text>
+  <text x="480" y="280" text-anchor="middle" font-size="9" fill="#FFCDD2">cursor blinks — keys active — clock keeps running</text>
+
+  <!-- EDIT → TIME return -->
+  <line x1="290" y1="275" x2="260" y2="275" stroke="#C62828" stroke-width="2" marker-end="url(#ah-red)"/>
+  <text x="250" y="268" text-anchor="end" font-size="10" fill="#C62828" font-weight="bold">INT1</text>
+
+  <!-- ====== CURSOR SUB-STATES (below EDIT) ====== -->
+  <line x1="480" y1="289" x2="480" y2="315" stroke="#E65100" stroke-width="2"/>
+  <polygon points="480,315 473,305 487,305" fill="#E65100"/>
+
+  <rect x="120" y="325" rx="8" ry="8" width="180" height="40" fill="url(#g-cursor)" filter="url(#shadow)"/>
+  <text x="210" y="341" text-anchor="middle" font-size="11" font-weight="bold" fill="#fff">cursor = 0</text>
+  <text x="210" y="356" text-anchor="middle" font-size="9" fill="#FFCCBC">Hours (digits 0–1)</text>
+
+  <rect x="390" y="325" rx="8" ry="8" width="180" height="40" fill="url(#g-cursor)" filter="url(#shadow)"/>
+  <text x="480" y="341" text-anchor="middle" font-size="11" font-weight="bold" fill="#fff">cursor = 1</text>
+  <text x="480" y="356" text-anchor="middle" font-size="9" fill="#FFCCBC">Minutes (digits 2–3)</text>
+
+  <rect x="660" y="325" rx="8" ry="8" width="180" height="40" fill="url(#g-cursor)" filter="url(#shadow)"/>
+  <text x="750" y="341" text-anchor="middle" font-size="11" font-weight="bold" fill="#fff">cursor = 2</text>
+  <text x="750" y="356" text-anchor="middle" font-size="9" fill="#FFCCBC">Seconds (digits 4–5)</text>
+
+  <!-- Cursor navigation arrows -->
+  <path d="M 300 338 L 380 338" stroke="#E65100" stroke-width="2" marker-end="url(#ah-orange)" fill="none"/>
+  <text x="340" y="330" text-anchor="middle" font-size="9" fill="#E65100" font-weight="bold">RIGHT</text>
+
+  <path d="M 380 352 L 300 352" stroke="#E65100" stroke-width="2" marker-end="url(#ah-orange)" fill="none"/>
+  <text x="340" y="362" text-anchor="middle" font-size="9" fill="#E65100" font-weight="bold">LEFT</text>
+
+  <path d="M 570 338 L 650 338" stroke="#E65100" stroke-width="2" marker-end="url(#ah-orange)" fill="none"/>
+  <text x="610" y="330" text-anchor="middle" font-size="9" fill="#E65100" font-weight="bold">RIGHT</text>
+
+  <path d="M 650 352 L 570 352" stroke="#E65100" stroke-width="2" marker-end="url(#ah-orange)" fill="none"/>
+  <text x="610" y="362" text-anchor="middle" font-size="9" fill="#E65100" font-weight="bold">LEFT</text>
+
+  <!-- ====== KEY ACTION PANEL (bottom) ====== -->
+  <rect x="80" y="395" rx="8" ry="8" width="840" height="145" fill="#FAFAFA" stroke="#BDBDBD" stroke-width="1.5"/>
+  <text x="500" y="417" text-anchor="middle" font-size="12" font-weight="bold" fill="#333">Key Actions (only when clock_edit = 1)</text>
+
+  <!-- UP row -->
+  <rect x="100" y="428" rx="6" ry="6" width="390" height="52" fill="#FFF8E1" stroke="#FFE082" stroke-width="1"/>
+  <text x="118" y="447" font-size="10" font-weight="bold" fill="#E65100">UP (PA0) — Increment</text>
+  <text x="118" y="463" font-size="9" fill="#555">cursor=0: hours++ (wrap 0→23→0) | cursor=1: minutes++ (0→59→0)</text>
+  <text x="118" y="477" font-size="9" fill="#555">cursor=2: seconds++ (wrap 0→59→0)</text>
+
+  <!-- DOWN row -->
+  <rect x="510" y="428" rx="6" ry="6" width="390" height="52" fill="#FFF8E1" stroke="#FFE082" stroke-width="1"/>
+  <text x="528" y="447" font-size="10" font-weight="bold" fill="#E65100">DOWN (PA1) — Decrement</text>
+  <text x="528" y="463" font-size="9" fill="#555">cursor=0: hours-- (wrap 0→23) | cursor=1: minutes-- (0→59)</text>
+  <text x="528" y="477" font-size="9" fill="#555">cursor=2: seconds-- (wrap 0→59)</text>
+
+  <!-- Blink B1 box -->
+  <rect x="100" y="494" rx="6" ry="6" width="800" height="38" fill="#E8F5E9" stroke="#A5D6A7" stroke-width="1"/>
+  <text x="118" y="510" font-size="10" font-weight="bold" fill="#2E7D32">B1 — Blinking Cursor</text>
+  <text x="118" y="524" font-size="9" fill="#555">set_blink(i, on) │ blink[i]=on │ ISR: if (blink[cur] &amp;&amp; (tick&gt;&gt;6)&amp;1) skip digit</text>
+
+  <!-- ====== LEGEND (bottom-right) ====== -->
+  <rect x="620" y="555" rx="6" ry="6" width="340" height="75" fill="#fff" stroke="#DDD" stroke-width="1"/>
+  <text x="635" y="563" font-size="10" font-weight="bold" fill="#333" font-family="Segoe UI, Arial, sans-serif">Legend</text>
+  <rect x="635" y="571" rx="3" ry="3" width="50" height="14" fill="url(#g-time)"/>
+  <text x="692" y="582" font-size="9" fill="#555">Display mode</text>
+  <rect x="635" y="589" rx="3" ry="3" width="50" height="14" fill="url(#g-edit)"/>
+  <text x="692" y="600" font-size="9" fill="#555">Edit mode</text>
+  <rect x="635" y="607" rx="3" ry="3" width="50" height="14" fill="url(#g-cursor)"/>
+  <text x="692" y="618" font-size="9" fill="#555">Cursor sub-state</text>
+
+  <line x1="770" y1="578" x2="820" y2="578" stroke="#1565C0" stroke-width="2" stroke-dasharray="6,3"/>
+  <text x="827" y="581" font-size="9" fill="#555">INT0 return</text>
+  <line x1="770" y1="596" x2="820" y2="596" stroke="#C62828" stroke-width="2"/>
+  <text x="827" y="599" font-size="9" fill="#555">INT1 toggle</text>
+  <line x1="770" y1="614" x2="820" y2="614" stroke="#E65100" stroke-width="2"/>
+  <text x="827" y="617" font-size="9" fill="#555">Key navigation</text>
+
+  <!-- INT0/INT1 signal labels -->
+  <text x="30" y="75" font-size="10" fill="#1565C0" font-weight="bold" font-family="Segoe UI, Arial, sans-serif">PD2 (INT0)</text>
+  <text x="30" y="95" font-size="10" fill="#C62828" font-weight="bold" font-family="Segoe UI, Arial, sans-serif">PD3 (INT1)</text>
+
+  <!-- Triggers summary -->
+  <text x="60" y="650" font-size="9" fill="#888">Triggers: INT0=PD2 (mode cycle)  |  INT1=PD3 (edit toggle)  |  Keys=PA0-3 (edit adjust)</text>
+  <text x="60" y="665" font-size="9" fill="#888">Timers: T1=1s tick  |  T2=2ms display refresh, key scan, heartbeat, blink</text>
+</svg>

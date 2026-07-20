@@ -1,0 +1,200 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 650" font-family="Consolas, 'Courier New', monospace">
+  <defs>
+    <marker id="ah" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#555"/>
+    </marker>
+    <marker id="ah-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#1565C0"/>
+    </marker>
+    <marker id="ah-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#2E7D32"/>
+    </marker>
+    <marker id="ah-orange" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#E65100"/>
+    </marker>
+    <marker id="ah-purple" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#6A1B9A"/>
+    </marker>
+
+    <linearGradient id="g-input" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFB74D"/><stop offset="100%" style="stop-color:#E65100"/>
+    </linearGradient>
+    <linearGradient id="g-mcu" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#42A5F5"/><stop offset="100%" style="stop-color:#1565C0"/>
+    </linearGradient>
+    <linearGradient id="g-output" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#66BB6A"/><stop offset="100%" style="stop-color:#2E7D32"/>
+    </linearGradient>
+    <linearGradient id="g-sensor" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#AB47BC"/><stop offset="100%" style="stop-color:#6A1B9A"/>
+    </linearGradient>
+    <linearGradient id="g-periph" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#EF5350"/><stop offset="100%" style="stop-color:#B71C1C"/>
+    </linearGradient>
+
+    <filter id="shadow" x="-5%" y="-5%" width="115%" height="115%">
+      <feDropShadow dx="2" dy="3" stdDeviation="3" flood-opacity="0.2"/>
+    </filter>
+    <filter id="shadow-light" x="-5%" y="-5%" width="115%" height="115%">
+      <feDropShadow dx="1" dy="2" stdDeviation="2" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <rect width="1000" height="650" fill="#FAFAFA" rx="6"/>
+
+  <text x="500" y="35" text-anchor="middle" font-size="16" font-weight="bold" fill="#333" font-family="Segoe UI, Arial, sans-serif">Hardware Block Diagram — ATmega32 System</text>
+
+  <!-- ====== GROUP BOXES ====== -->
+
+  <!-- INPUT GROUP -->
+  <rect x="30" y="55" rx="8" ry="8" width="220" height="330" fill="none" stroke="#E65100" stroke-width="1.5" stroke-dasharray="6,3"/>
+  <text x="140" y="70" text-anchor="middle" font-size="11" font-weight="bold" fill="#E65100">Input Devices</text>
+
+  <!-- KEYPAD BUTTONS -->
+  <rect x="45" y="85" rx="6" ry="6" width="190" height="42" fill="url(#g-input)" filter="url(#shadow-light)"/>
+  <text x="55" y="102" font-size="10" font-weight="bold" fill="#fff">PA0 — INC (UP)</text>
+  <text x="55" y="118" font-size="9" fill="#FFF3E0">Increment hours/min/sec</text>
+
+  <rect x="45" y="135" rx="6" ry="6" width="190" height="42" fill="url(#g-input)" filter="url(#shadow-light)"/>
+  <text x="55" y="152" font-size="10" font-weight="bold" fill="#fff">PA1 — DEC (DOWN)</text>
+  <text x="55" y="168" font-size="9" fill="#FFF3E0">Decrement hours/min/sec</text>
+
+  <rect x="45" y="185" rx="6" ry="6" width="190" height="42" fill="url(#g-input)" filter="url(#shadow-light)"/>
+  <text x="55" y="202" font-size="10" font-weight="bold" fill="#fff">PA2 — RIGHT</text>
+  <text x="55" y="218" font-size="9" fill="#FFF3E0">Move cursor forward</text>
+
+  <rect x="45" y="235" rx="6" ry="6" width="190" height="42" fill="url(#g-input)" filter="url(#shadow-light)"/>
+  <text x="55" y="252" font-size="10" font-weight="bold" fill="#fff">PA3 — LEFT</text>
+  <text x="55" y="268" font-size="9" fill="#FFF3E0">Move cursor backward</text>
+
+  <!-- INT BUTTONS -->
+  <rect x="45" y="290" rx="6" ry="6" width="190" height="32" fill="url(#g-periph)" filter="url(#shadow-light)"/>
+  <text x="55" y="306" font-size="9" font-weight="bold" fill="#fff">PD2 (INT0) — MODE button</text>
+  <text x="55" y="318" font-size="8" fill="#FFCDD2">Falling edge, internal pull-up</text>
+
+  <rect x="45" y="330" rx="6" ry="6" width="190" height="32" fill="url(#g-periph)" filter="url(#shadow-light)"/>
+  <text x="55" y="346" font-size="9" font-weight="bold" fill="#fff">PD3 (INT1) — EDIT button</text>
+  <text x="55" y="358" font-size="8" fill="#FFCDD2">Falling edge, internal pull-up</text>
+
+  <!-- ====== MCU CENTER BLOCK ====== -->
+  <rect x="340" y="75" rx="12" ry="12" width="320" height="315" fill="url(#g-mcu)" filter="url(#shadow)"/>
+  <text x="500" y="100" text-anchor="middle" font-size="14" font-weight="bold" fill="#fff">ATmega32 @ 8 MHz</text>
+  <line x1="355" y1="108" x2="645" y2="108" stroke="#90CAF9" stroke-width="1"/>
+
+  <!-- CPU Core -->
+  <rect x="360" y="120" rx="6" ry="6" width="280" height="36" fill="#fff" opacity="0.95"/>
+  <text x="500" y="140" text-anchor="middle" font-size="11" font-weight="bold" fill="#1565C0">AVR CPU Core</text>
+  <text x="500" y="153" text-anchor="middle" font-size="8" fill="#555">8-bit RISC — most instructions single-cycle</text>
+
+  <!-- Internal peripherals -->
+  <rect x="360" y="168" rx="5" ry="5" width="135" height="36" fill="#E3F2FD"/>
+  <text x="427" y="186" text-anchor="middle" font-size="9" font-weight="bold" fill="#1565C0">Timer1 — 16-bit</text>
+  <text x="427" y="198" text-anchor="middle" font-size="8" fill="#555">CTC, /256, 1s tick</text>
+
+  <rect x="505" y="168" rx="5" ry="5" width="135" height="36" fill="#E3F2FD"/>
+  <text x="572" y="186" text-anchor="middle" font-size="9" font-weight="bold" fill="#1565C0">Timer2 — 8-bit</text>
+  <text x="572" y="198" text-anchor="middle" font-size="8" fill="#555">CTC, /64, 2ms tick</text>
+
+  <rect x="360" y="212" rx="5" ry="5" width="135" height="36" fill="#E3F2FD"/>
+  <text x="427" y="230" text-anchor="middle" font-size="9" font-weight="bold" fill="#1565C0">USART</text>
+  <text x="427" y="242" text-anchor="middle" font-size="8" fill="#555">9600 8N1, RX IRQ</text>
+
+  <rect x="505" y="212" rx="5" ry="5" width="135" height="36" fill="#E3F2FD"/>
+  <text x="572" y="230" text-anchor="middle" font-size="9" font-weight="bold" fill="#1565C0">INT0 / INT1</text>
+  <text x="572" y="242" text-anchor="middle" font-size="8" fill="#555">Falling-edge ext. IRQ</text>
+
+  <!-- I/O Ports -->
+  <rect x="360" y="256" rx="5" ry="5" width="135" height="30" fill="#FFF3E0"/>
+  <text x="427" y="274" text-anchor="middle" font-size="9" font-weight="bold" fill="#E65100">PORTA (in + pull-ups)</text>
+
+  <rect x="505" y="256" rx="5" ry="5" width="135" height="30" fill="#E8F5E9"/>
+  <text x="572" y="274" text-anchor="middle" font-size="9" font-weight="bold" fill="#2E7D32">PORTB (out, seg)</text>
+
+  <rect x="360" y="294" rx="5" ry="5" width="135" height="30" fill="#E8F5E9"/>
+  <text x="427" y="312" text-anchor="middle" font-size="9" font-weight="bold" fill="#2E7D32">PORTC (out, digit en.)</text>
+
+  <rect x="505" y="294" rx="5" ry="5" width="135" height="30" fill="#F3E5F5"/>
+  <text x="572" y="312" text-anchor="middle" font-size="9" font-weight="bold" fill="#6A1B9A">PORTD (UART + LED)</text>
+
+  <!-- MCU bottom note -->
+  <rect x="360" y="332" rx="5" ry="5" width="280" height="42" fill="#E8EAF6"/>
+  <text x="500" y="349" text-anchor="middle" font-size="9" font-weight="bold" fill="#283593">Disabled peripherals</text>
+  <text x="500" y="364" text-anchor="middle" font-size="8" fill="#555">ADC / SPI / TWI / Analog Comp / Timer0</text>
+
+  <!-- ====== OUTPUT GROUP ====== -->
+  <rect x="750" y="55" rx="8" ry="8" width="220" height="300" fill="none" stroke="#2E7D32" stroke-width="1.5" stroke-dasharray="6,3"/>
+  <text x="860" y="70" text-anchor="middle" font-size="11" font-weight="bold" fill="#2E7D32">Output Devices</text>
+
+  <!-- Display -->
+  <rect x="765" y="85" rx="6" ry="6" width="190" height="55" fill="url(#g-output)" filter="url(#shadow-light)"/>
+  <text x="775" y="103" font-size="10" font-weight="bold" fill="#fff">7SEG-MPX6-CA Display</text>
+  <text x="775" y="118" font-size="9" fill="#E8F5E9">6-digit common-anode</text>
+  <text x="775" y="133" font-size="9" fill="#E8F5E9">Time / Temp / Humidity</text>
+
+  <!-- Segment driver -->
+  <rect x="765" y="155" rx="6" ry="6" width="190" height="40" fill="#C8E6C9" filter="url(#shadow-light)"/>
+  <text x="775" y="172" font-size="10" font-weight="bold" fill="#2E7D32">PORTB → 220Ω resistors</text>
+  <text x="775" y="188" font-size="9" fill="#555">Segment data (a..g, dp) active-low</text>
+
+  <!-- Digit driver -->
+  <rect x="765" y="205" rx="6" ry="6" width="190" height="40" fill="#C8E6C9" filter="url(#shadow-light)"/>
+  <text x="775" y="222" font-size="10" font-weight="bold" fill="#2E7D32">PORTC0-5 → Digit enable</text>
+  <text x="775" y="238" font-size="9" fill="#555">Common-anode driver transistors</text>
+
+  <!-- Heartbeat LED -->
+  <rect x="765" y="255" rx="6" ry="6" width="190" height="35" fill="#FFECB3" filter="url(#shadow-light)"/>
+  <text x="775" y="272" font-size="10" font-weight="bold" fill="#E65100">PD4 → Heartbeat LED</text>
+  <text x="775" y="286" font-size="9" fill="#555">Toggles at 1 Hz</text>
+
+  <!-- ====== SENSOR MODULE ====== -->
+  <rect x="750" y="350" rx="8" ry="8" width="220" height="90" fill="url(#g-sensor)" filter="url(#shadow)"/>
+  <text x="860" y="372" text-anchor="middle" font-size="11" font-weight="bold" fill="#fff">Remote Sensor Board</text>
+  <text x="860" y="388" text-anchor="middle" font-size="9" fill="#F3E5F5">SysDig2AVRProject.hex</text>
+  <text x="860" y="403" text-anchor="middle" font-size="9" fill="#F3E5F5">UART slave @ 9600 baud</text>
+  <text x="860" y="418" text-anchor="middle" font-size="9" fill="#F3E5F5">Replies: 'C' / 'F' / 'H'</text>
+  <text x="860" y="433" text-anchor="middle" font-size="8" fill="#CE93D8">Temp / Humidity sensor</text>
+
+  <!-- ====== ARROWS ====== -->
+
+  <!-- Input → MCU -->
+  <line x1="235" y1="106" x2="330" y2="155" stroke="#E65100" stroke-width="2" marker-end="url(#ah-orange)"/>
+  <line x1="235" y1="156" x2="330" y2="180" stroke="#E65100" stroke-width="2" marker-end="url(#ah-orange)"/>
+  <line x1="235" y1="206" x2="330" y2="205" stroke="#E65100" stroke-width="2" marker-end="url(#ah-orange)"/>
+  <line x1="235" y1="256" x2="330" y2="230" stroke="#E65100" stroke-width="2" marker-end="url(#ah-orange)"/>
+
+  <line x1="235" y1="306" x2="330" y2="255" stroke="#B71C1C" stroke-width="2" stroke-dasharray="5,3" marker-end="url(#ah-purple)"/>
+  <line x1="235" y1="346" x2="330" y2="280" stroke="#B71C1C" stroke-width="2" stroke-dasharray="5,3" marker-end="url(#ah-purple)"/>
+
+  <!-- MCU → Output -->
+  <line x1="660" y1="175" x2="755" y2="175" stroke="#2E7D32" stroke-width="2" marker-end="url(#ah-green)"/>
+  <line x1="660" y1="225" x2="755" y2="225" stroke="#2E7D32" stroke-width="2" marker-end="url(#ah-green)"/>
+  <line x1="660" y1="272" x2="755" y2="272" stroke="#2E7D32" stroke-width="2" marker-end="url(#ah-green)"/>
+
+  <!-- MCU ↔ Sensor (UART bidirectional) -->
+  <line x1="660" y1="365" x2="720" y2="365" stroke="#6A1B9A" stroke-width="2"/>
+  <polygon points="730,365 715,358 715,372" fill="#6A1B9A"/>
+  <line x1="720" y1="390" x2="660" y2="390" stroke="#6A1B9A" stroke-width="2"/>
+  <polygon points="660,390 675,383 675,397" fill="#6A1B9A"/>
+
+  <text x="685" y="360" text-anchor="middle" font-size="8" fill="#6A1B9A" font-weight="bold">TXD →</text>
+  <text x="685" y="403" text-anchor="middle" font-size="8" fill="#6A1B9A" font-weight="bold">← RXD</text>
+
+  <!-- Legend -->
+  <rect x="30" y="400" rx="6" ry="6" width="280" height="105" fill="#fff" stroke="#DDD" stroke-width="1" filter="url(#shadow-light)"/>
+  <text x="45" y="418" font-size="10" font-weight="bold" fill="#333" font-family="Segoe UI, Arial, sans-serif">Legend</text>
+
+  <line x1="45" y1="436" x2="95" y2="436" stroke="#E65100" stroke-width="2"/>
+  <text x="102" y="439" font-size="9" fill="#555">Keypad scan (PA0-3) — polled every 2ms</text>
+
+  <line x1="45" y1="454" x2="95" y2="454" stroke="#B71C1C" stroke-width="2" stroke-dasharray="5,3"/>
+  <text x="102" y="457" font-size="9" fill="#555">INT0/INT1 — falling-edge external IRQ</text>
+
+  <line x1="45" y1="472" x2="95" y2="472" stroke="#2E7D32" stroke-width="2"/>
+  <text x="102" y="475" font-size="9" fill="#555">Display / LED output drive</text>
+
+  <line x1="45" y1="490" x2="95" y2="490" stroke="#6A1B9A" stroke-width="2"/>
+  <text x="102" y="493" font-size="9" fill="#555">UART bidirectional (TX → / RX ←)</text>
+
+  <!-- Footer -->
+  <text x="500" y="620" text-anchor="middle" font-size="9" fill="#888">ATmega32 @ 8 MHz | 7SEG-MPX6-CA | USART 9600 8N1 | Timer1 (1s) + Timer2 (2ms)</text>
+</svg>

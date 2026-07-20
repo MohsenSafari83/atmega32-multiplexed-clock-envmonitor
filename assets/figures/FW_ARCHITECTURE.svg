@@ -1,0 +1,136 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 650" font-family="Consolas, 'Courier New', monospace">
+  <defs>
+    <marker id="ah" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <polygon points="0 0, 7 2.5, 0 5" fill="#555"/>
+    </marker>
+    <marker id="ah-blue" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <polygon points="0 0, 7 2.5, 0 5" fill="#1565C0"/>
+    </marker>
+    <marker id="ah-red" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <polygon points="0 0, 7 2.5, 0 5" fill="#C62828"/>
+    </marker>
+    <marker id="ah-orange" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <polygon points="0 0, 7 2.5, 0 5" fill="#E65100"/>
+    </marker>
+
+    <linearGradient id="g-init" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#78909C"/><stop offset="100%" style="stop-color:#455A64"/>
+    </linearGradient>
+    <linearGradient id="g-main" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#42A5F5"/><stop offset="100%" style="stop-color:#1565C0"/>
+    </linearGradient>
+    <linearGradient id="g-isr" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#66BB6A"/><stop offset="100%" style="stop-color:#2E7D32"/>
+    </linearGradient>
+    <linearGradient id="g-isr-alt" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#EF5350"/><stop offset="100%" style="stop-color:#B71C1C"/>
+    </linearGradient>
+
+    <filter id="shadow" x="-5%" y="-5%" width="115%" height="115%">
+      <feDropShadow dx="2" dy="3" stdDeviation="3" flood-opacity="0.2"/>
+    </filter>
+  </defs>
+
+  <rect width="900" height="650" fill="#FAFAFA" rx="6"/>
+
+  <text x="450" y="35" text-anchor="middle" font-size="16" font-weight="bold" fill="#333" font-family="Segoe UI, Arial, sans-serif">Firmware Architecture — Execution Flow</text>
+
+  <!-- ====== TOP: Init Chain ====== -->
+
+  <rect x="350" y="55" rx="10" ry="10" width="200" height="36" fill="url(#g-init)" filter="url(#shadow)"/>
+  <text x="450" y="76" text-anchor="middle" font-size="11" font-weight="bold" fill="#fff">Power-on / Reset</text>
+
+  <line x1="450" y1="91" x2="450" y2="119" stroke="#455A64" stroke-width="2" marker-end="url(#ah)"/>
+
+  <!-- Init box (wider, with better padding) -->
+  <rect x="170" y="120" rx="8" ry="8" width="560" height="85" fill="#ECEFF1" stroke="#90A4AE" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="450" y="142" text-anchor="middle" font-size="11" font-weight="bold" fill="#37474F">Hardware Initialization</text>
+  <line x1="185" y1="150" x2="715" y2="150" stroke="#CFD8DC" stroke-width="1"/>
+  <text x="188" y="165" font-size="9" fill="#555">DDRA/B/C/D config  |  PORTA pull-ups  |  PORTB=0xFF (seg off)  |  PORTC=0x00</text>
+  <text x="188" y="179" font-size="9" fill="#555">Timer1 CTC /256 OCR1A=31249  |  Timer2 CTC /64 OCR2=249  |  INT0/INT1 falling-edge</text>
+  <text x="188" y="193" font-size="9" fill="#555">USART 9600 8N1 + RXCIE  |  Disable unused: ADC/SPI/TWI/AC/T0</text>
+
+  <line x1="450" y1="205" x2="450" y2="234" stroke="#455A64" stroke-width="2" marker-end="url(#ah)"/>
+
+  <!-- sei() -->
+  <rect x="350" y="235" rx="10" ry="10" width="200" height="36" fill="url(#g-init)" filter="url(#shadow)"/>
+  <text x="450" y="256" text-anchor="middle" font-size="11" font-weight="bold" fill="#fff">Global Interrupts Enabled (sei)</text>
+
+  <line x1="450" y1="271" x2="450" y2="299" stroke="#455A64" stroke-width="2" marker-end="url(#ah)"/>
+
+  <!-- ====== MAIN LOOP ====== -->
+  <rect x="275" y="300" rx="12" ry="12" width="350" height="130" fill="url(#g-main)" filter="url(#shadow)"/>
+  <text x="450" y="322" text-anchor="middle" font-size="12" font-weight="bold" fill="#fff">Main Super-loop (cooperative)</text>
+  <line x1="290" y1="330" x2="610" y2="330" stroke="#90CAF9" stroke-width="1"/>
+
+  <rect x="290" y="340" rx="5" ry="5" width="320" height="28" fill="#fff" opacity="0.9"/>
+  <text x="450" y="357" text-anchor="middle" font-size="10" fill="#1565C0">poll_temperature()</text>
+
+  <rect x="290" y="375" rx="5" ry="5" width="320" height="28" fill="#fff" opacity="0.9"/>
+  <text x="450" y="392" text-anchor="middle" font-size="10" fill="#1565C0">update_display()</text>
+
+  <!-- Loop arrow -->
+  <path d="M 610 390 L 635 390 L 635 355 L 620 355" stroke="#1565C0" stroke-width="2" fill="none" marker-end="url(#ah-blue)"/>
+
+  <!-- ====== ISR BLOCKS (right side, aligned with Main Loop) ====== -->
+
+  <text x="770" y="192" text-anchor="middle" font-size="11" font-weight="bold" fill="#2E7D32" font-family="Segoe UI, Arial, sans-serif">Interrupt Service Routines</text>
+
+  <!-- INT0 -->
+  <rect x="670" y="200" rx="6" ry="6" width="200" height="42" fill="url(#g-isr-alt)" filter="url(#shadow)"/>
+  <text x="680" y="218" font-size="10" font-weight="bold" fill="#fff">EXT_INT0</text>
+  <text x="680" y="234" font-size="8" fill="#FFCDD2">mode = (mode+1) % 4</text>
+
+  <path d="M 625 270 C 640 270, 650 221, 670 221" stroke="#1565C0" stroke-width="1.5" stroke-dasharray="5,3" fill="none" marker-end="url(#ah-blue)"/>
+  <text x="540" y="218" font-size="8" fill="#1565C0">button press (async)</text>
+
+  <!-- INT1 -->
+  <rect x="670" y="248" rx="6" ry="6" width="200" height="42" fill="url(#g-isr-alt)" filter="url(#shadow)"/>
+  <text x="680" y="266" font-size="10" font-weight="bold" fill="#fff">EXT_INT1</text>
+  <text x="680" y="282" font-size="8" fill="#FFCDD2">clock_edit ^= 1</text>
+
+  <path d="M 625 310 C 640 310, 650 269, 670 269" stroke="#1565C0" stroke-width="1.5" stroke-dasharray="5,3" fill="none" marker-end="url(#ah-blue)"/>
+  <text x="540" y="266" font-size="8" fill="#1565C0">button press (async)</text>
+
+  <!-- TIM1_COMPA -->
+  <rect x="670" y="295" rx="6" ry="6" width="200" height="55" fill="url(#g-isr)" filter="url(#shadow)"/>
+  <text x="680" y="313" font-size="10" font-weight="bold" fill="#fff">TIM1_COMPA (1 Hz)</text>
+  <text x="680" y="329" font-size="8" fill="#E8F5E9">seconds++ (roll at 60)</text>
+  <text x="680" y="343" font-size="8" fill="#E8F5E9">→ minutes → hours → temp_request</text>
+
+  <path d="M 625 345 C 640 345, 650 322, 670 322" stroke="#1565C0" stroke-width="1.5" stroke-dasharray="5,3" fill="none" marker-end="url(#ah-blue)"/>
+  <text x="540" y="336" font-size="8" fill="#1565C0">1s timer tick</text>
+
+  <!-- TIM2_COMP -->
+  <rect x="670" y="355" rx="6" ry="6" width="200" height="70" fill="url(#g-isr)" filter="url(#shadow)"/>
+  <text x="680" y="373" font-size="10" font-weight="bold" fill="#fff">TIM2_COMP (2 ms / 500 Hz)</text>
+  <text x="680" y="389" font-size="8" fill="#E8F5E9">scan_edit_keys() → apply_keys()</text>
+  <text x="680" y="403" font-size="8" fill="#E8F5E9">Digit multiplex + blink mask</text>
+  <text x="680" y="417" font-size="8" fill="#E8F5E9">Heartbeat LED (every 500 ticks)</text>
+
+  <path d="M 625 385 C 640 385, 650 390, 670 390" stroke="#1565C0" stroke-width="1.5" stroke-dasharray="5,3" fill="none" marker-end="url(#ah-blue)"/>
+  <text x="540" y="397" font-size="8" fill="#1565C0">2ms timer tick</text>
+
+  <!-- USART_RXC -->
+  <rect x="670" y="430" rx="6" ry="6" width="200" height="42" fill="url(#g-isr-alt)" filter="url(#shadow)"/>
+  <text x="680" y="448" font-size="10" font-weight="bold" fill="#fff">USART_RXC</text>
+  <text x="680" y="464" font-size="8" fill="#FFCDD2">current_temp = (signed char)UDR</text>
+
+  <path d="M 625 410 C 640 410, 650 451, 670 451" stroke="#1565C0" stroke-width="1.5" stroke-dasharray="5,3" fill="none" marker-end="url(#ah-blue)"/>
+  <text x="540" y="442" font-size="8" fill="#1565C0">UART RX byte</text>
+
+  <!-- First call note -->
+  <rect x="285" y="450" rx="5" ry="5" width="260" height="32" fill="#E3F2FD" stroke="#90CAF9" stroke-width="1" filter="url(#shadow)"/>
+  <text x="415" y="466" text-anchor="middle" font-size="9" fill="#1565C0">update_display() priming call (once before loop)</text>
+  <line x1="450" y1="430" x2="450" y2="445" stroke="#1565C0" stroke-width="1.2" stroke-dasharray="3,2"/>
+
+  <!-- ====== BOTTOM NOTE ====== -->
+  <rect x="100" y="510" rx="6" ry="6" width="700" height="74" fill="#FAFAFA" stroke="#DDD" stroke-width="1"/>
+  <text x="450" y="530" text-anchor="middle" font-size="10" font-weight="bold" fill="#333" font-family="Segoe UI, Arial, sans-serif">Design Notes</text>
+  <text x="120" y="550" font-size="9" fill="#555">• Main loop is intentionally lightweight — all real-time work lives in interrupt context</text>
+  <text x="120" y="565" font-size="9" fill="#555">• Timer1 (1s) and Timer2 (2ms) are independent — timekeeping never blocked by display work</text>
+  <text x="120" y="580" font-size="9" fill="#555">• All ISRs are kept short; shared variables are volatile and 1-byte (atomic on AVR)</text>
+
+  <!-- Footer -->
+  <text x="450" y="625" text-anchor="middle" font-size="9" fill="#888">ATmega32 @ 8 MHz | CodeVisionAVR C | Proteus Simulation</text>
+</svg>

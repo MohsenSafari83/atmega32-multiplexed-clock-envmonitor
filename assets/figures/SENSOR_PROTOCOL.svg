@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 560" font-family="Consolas, 'Courier New', monospace">
+  <defs>
+    <marker id="ah" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <polygon points="0 0, 7 2.5, 0 5" fill="#555"/>
+    </marker>
+    <marker id="ah-blue" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <polygon points="0 0, 7 2.5, 0 5" fill="#1565C0"/>
+    </marker>
+    <marker id="ah-green" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <polygon points="0 0, 7 2.5, 0 5" fill="#2E7D32"/>
+    </marker>
+
+    <linearGradient id="g-mcu" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#42A5F5"/><stop offset="100%" style="stop-color:#1565C0"/>
+    </linearGradient>
+    <linearGradient id="g-sensor" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#66BB6A"/><stop offset="100%" style="stop-color:#2E7D32"/>
+    </linearGradient>
+    <linearGradient id="g-req" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#1565C0"/><stop offset="100%" style="stop-color:#42A5F5"/>
+    </linearGradient>
+    <linearGradient id="g-rep" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#2E7D32"/><stop offset="100%" style="stop-color:#66BB6A"/>
+    </linearGradient>
+
+    <filter id="shadow" x="-5%" y="-5%" width="115%" height="115%">
+      <feDropShadow dx="2" dy="3" stdDeviation="3" flood-opacity="0.2"/>
+    </filter>
+  </defs>
+
+  <rect width="900" height="560" fill="#FAFAFA" rx="6"/>
+
+  <text x="450" y="35" text-anchor="middle" font-size="16" font-weight="bold" fill="#333" font-family="Segoe UI, Arial, sans-serif">Sensor Communication Protocol — UART Request / Response</text>
+  <text x="450" y="55" text-anchor="middle" font-size="10" fill="#777">9600 baud, 8N1 — one byte out, one byte back</text>
+
+  <!-- ====== ACTOR HEADERS ====== -->
+  <rect x="90" y="80" rx="10" ry="10" width="220" height="50" fill="url(#g-mcu)" filter="url(#shadow)"/>
+  <text x="200" y="102" text-anchor="middle" font-size="12" font-weight="bold" fill="#fff">ATmega32</text>
+  <text x="200" y="118" text-anchor="middle" font-size="9" fill="#E3F2FD">Display / controller board</text>
+
+  <rect x="590" y="80" rx="10" ry="10" width="220" height="50" fill="url(#g-sensor)" filter="url(#shadow)"/>
+  <text x="700" y="102" text-anchor="middle" font-size="12" font-weight="bold" fill="#fff">Sensor Board</text>
+  <text x="700" y="118" text-anchor="middle" font-size="9" fill="#E8F5E9">External AVR (black box)</text>
+
+  <!-- Lifelines -->
+  <line x1="200" y1="130" x2="200" y2="470" stroke="#90A4AE" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <line x1="700" y1="130" x2="700" y2="470" stroke="#90A4AE" stroke-width="1.5" stroke-dasharray="4,3"/>
+
+  <!-- ====== STEP 1: request ====== -->
+  <rect x="200" y="160" width="500" height="26" fill="url(#g-req)" opacity="0.15" rx="4"/>
+  <line x1="200" y1="173" x2="690" y2="173" stroke="#1565C0" stroke-width="2.5" marker-end="url(#ah-blue)"/>
+  <text x="450" y="164" text-anchor="middle" font-size="10" font-weight="bold" fill="#1565C0">① request byte — 'C' / 'F' / 'H'</text>
+  <text x="450" y="196" text-anchor="middle" font-size="8" fill="#555">identifies the unit currently being displayed  |  10-bit frame ≈ 1.042 ms</text>
+
+  <!-- ====== STEP 2: sensor processing ====== -->
+  <rect x="620" y="215" rx="6" ry="6" width="160" height="40" fill="#ECEFF1" stroke="#90A4AE" stroke-width="1.2"/>
+  <text x="700" y="233" text-anchor="middle" font-size="9" font-weight="bold" fill="#37474F">② measure &amp; scale</text>
+  <text x="700" y="247" text-anchor="middle" font-size="8" fill="#607D8B">to the requested unit</text>
+
+  <!-- ====== STEP 3: reply ====== -->
+  <rect x="200" y="278" width="500" height="26" fill="url(#g-rep)" opacity="0.15" rx="4"/>
+  <line x1="690" y1="291" x2="200" y2="291" stroke="#2E7D32" stroke-width="2.5" marker-end="url(#ah-green)"/>
+  <text x="450" y="282" text-anchor="middle" font-size="10" font-weight="bold" fill="#2E7D32">③ reply byte — signed value, already scaled</text>
+  <text x="450" y="314" text-anchor="middle" font-size="8" fill="#555">no unit-conversion arithmetic on the ATmega32 side  |  10-bit frame ≈ 1.042 ms</text>
+
+  <!-- ====== STEP 4: RX ISR + atomic store ====== -->
+  <rect x="90" y="335" rx="8" ry="8" width="220" height="55" fill="url(#g-mcu)" filter="url(#shadow)"/>
+  <text x="200" y="355" text-anchor="middle" font-size="10" font-weight="bold" fill="#fff">USART_RXC ISR</text>
+  <text x="200" y="370" text-anchor="middle" font-size="8" fill="#E3F2FD">current_temp = (signed char)UDR</text>
+  <text x="200" y="383" text-anchor="middle" font-size="8" fill="#BBDEFB">single-byte store → atomic on AVR</text>
+
+  <line x1="200" y1="304" x2="200" y2="332" stroke="#2E7D32" stroke-width="1.5" marker-end="url(#ah-green)"/>
+
+  <!-- ====== TOTAL TRANSACTION TIME ====== -->
+  <rect x="330" y="335" rx="6" ry="6" width="240" height="55" fill="#FFF8E1" stroke="#FFB300" stroke-width="1"/>
+  <text x="450" y="355" text-anchor="middle" font-size="9" font-weight="bold" fill="#795548">Total transaction</text>
+  <text x="450" y="370" text-anchor="middle" font-size="9" fill="#5D4037">≈ 2.1 ms + sensor latency</text>
+  <text x="450" y="383" text-anchor="middle" font-size="8" fill="#8D6E63">negligible vs. 60 s poll interval</text>
+
+  <!-- ====== POLLING CADENCE NOTE ====== -->
+  <rect x="600" y="335" rx="6" ry="6" width="210" height="55" fill="#E8F5E9" stroke="#81C784" stroke-width="1"/>
+  <text x="705" y="352" text-anchor="middle" font-size="9" font-weight="bold" fill="#2E7D32">Polling cadence</text>
+  <text x="705" y="367" text-anchor="middle" font-size="8" fill="#33691E">once per minute, for the</text>
+  <text x="705" y="380" text-anchor="middle" font-size="8" fill="#33691E">screen currently on-display</text>
+
+  <!-- ====== BOTTOM NOTE PANEL ====== -->
+  <rect x="90" y="415" rx="6" ry="6" width="720" height="115" fill="#FAFAFA" stroke="#DDD" stroke-width="1"/>
+  <text x="450" y="435" text-anchor="middle" font-size="10" font-weight="bold" fill="#333" font-family="Segoe UI, Arial, sans-serif">Protocol Notes</text>
+  <text x="110" y="455" font-size="9" fill="#555">• The request byte identifies the unit currently being displayed ('C', 'F', or 'H').</text>
+  <text x="110" y="472" font-size="9" fill="#555">• The reply is already scaled to that unit — the display firmware performs no conversion arithmetic.</text>
+  <text x="110" y="489" font-size="9" fill="#555">• Reception is fully interrupt-driven (USART_RXC); the single-byte store into current_temp is atomic on AVR, so no critical section is needed.</text>
+  <text x="110" y="506" font-size="9" fill="#555">• A request is issued once per minute, only for the screen currently on-display.</text>
+
+  <!-- Footer -->
+  <text x="450" y="548" text-anchor="middle" font-size="9" fill="#888">9600 baud | 8N1 | ATmega32 @ 8 MHz</text>
+</svg>

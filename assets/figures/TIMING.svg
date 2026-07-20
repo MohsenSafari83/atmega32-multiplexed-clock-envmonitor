@@ -1,0 +1,407 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 700" width="100%" height="100%">
+  <defs>
+    <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#555"/>
+    </marker>
+    <marker id="pulse-arrow" markerWidth="12" markerHeight="8" refX="12" refY="4" orient="auto">
+      <polygon points="0 0, 12 4, 0 8" fill="#c62828"/>
+    </marker>
+    <linearGradient id="headerGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#1a237e"/>
+      <stop offset="100%" stop-color="#283593"/>
+    </linearGradient>
+    <linearGradient id="t1Grad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#e53935"/>
+      <stop offset="100%" stop-color="#ef5350"/>
+    </linearGradient>
+    <linearGradient id="t2Grad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#2e7d32"/>
+      <stop offset="100%" stop-color="#43a047"/>
+    </linearGradient>
+    <linearGradient id="ledGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#f9a825"/>
+      <stop offset="100%" stop-color="#fdd835"/>
+    </linearGradient>
+    <linearGradient id="uartGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#00838f"/>
+      <stop offset="100%" stop-color="#00acc1"/>
+    </linearGradient>
+    <linearGradient id="blinkGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#6a1b9a"/>
+      <stop offset="100%" stop-color="#8e24aa"/>
+    </linearGradient>
+    <filter id="shadow" x="-2%" y="-2%" width="104%" height="104%">
+      <feDropShadow dx="1" dy="1" stdDeviation="1.5" flood-opacity="0.25"/>
+    </filter>
+    <filter id="glow-red">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <pattern id="stripe" patternUnits="userSpaceOnUse" width="6" height="6">
+      <rect width="6" height="6" fill="#fce4ec"/>
+      <line x1="0" y1="6" x2="6" y2="0" stroke="#f8bbd0" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1000" height="700" fill="#fafafa"/>
+
+  <!-- Title bar -->
+  <rect x="0" y="0" width="1000" height="42" fill="url(#headerGrad)"/>
+  <text x="500" y="28" text-anchor="middle" font-size="16" font-weight="bold" fill="#fff" font-family="Segoe UI, Arial, sans-serif">Timing Diagram — Periodic and Event-Driven Relationships</text>
+
+  <!-- ===== TIMELINE AXIS ===== -->
+  <line x1="130" y1="58" x2="930" y2="58" stroke="#333" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+  
+  <!-- Time labels and tick marks -->
+  <!-- Major ticks every 0.2s = 80px each; total 800px for 2s -->
+  <!-- x: 130 to 930, span=800px for 0 to 2.0s. 400px/s -->
+  
+  <!-- t=0 -->
+  <line x1="130" y1="52" x2="130" y2="64" stroke="#333" stroke-width="1.5"/>
+  <text x="130" y="74" text-anchor="middle" font-size="10" fill="#555" font-family="Segoe UI, Arial, sans-serif">0</text>
+  
+  <!-- t=0.2s (x=210) -->
+  <line x1="210" y1="54" x2="210" y2="62" stroke="#888" stroke-width="1"/>
+  <text x="210" y="74" text-anchor="middle" font-size="9" fill="#888" font-family="Segoe UI, Arial, sans-serif">0.2</text>
+  <!-- t=0.4s (x=290) -->
+  <line x1="290" y1="54" x2="290" y2="62" stroke="#888" stroke-width="1"/>
+  <text x="290" y="74" text-anchor="middle" font-size="9" fill="#888" font-family="Segoe UI, Arial, sans-serif">0.4</text>
+  <!-- t=0.6s (x=370) -->
+  <line x1="370" y1="54" x2="370" y2="62" stroke="#888" stroke-width="1"/>
+  <text x="370" y="74" text-anchor="middle" font-size="9" fill="#888" font-family="Segoe UI, Arial, sans-serif">0.6</text>
+  <!-- t=0.8s (x=450) -->
+  <line x1="450" y1="54" x2="450" y2="62" stroke="#888" stroke-width="1"/>
+  <text x="450" y="74" text-anchor="middle" font-size="9" fill="#888" font-family="Segoe UI, Arial, sans-serif">0.8</text>
+  
+  <!-- t=1.0s (x=530) -->
+  <line x1="530" y1="52" x2="530" y2="64" stroke="#333" stroke-width="1.5"/>
+  <text x="530" y="74" text-anchor="middle" font-size="10" font-weight="bold" fill="#333" font-family="Segoe UI, Arial, sans-serif">1.0</text>
+  
+  <!-- t=1.2s (x=610) -->
+  <line x1="610" y1="54" x2="610" y2="62" stroke="#888" stroke-width="1"/>
+  <text x="610" y="74" text-anchor="middle" font-size="9" fill="#888" font-family="Segoe UI, Arial, sans-serif">1.2</text>
+  <!-- t=1.4s (x=690) -->
+  <line x1="690" y1="54" x2="690" y2="62" stroke="#888" stroke-width="1"/>
+  <text x="690" y="74" text-anchor="middle" font-size="9" fill="#888" font-family="Segoe UI, Arial, sans-serif">1.4</text>
+  <!-- t=1.6s (x=770) -->
+  <line x1="770" y1="54" x2="770" y2="62" stroke="#888" stroke-width="1"/>
+  <text x="770" y="74" text-anchor="middle" font-size="9" fill="#888" font-family="Segoe UI, Arial, sans-serif">1.6</text>
+  <!-- t=1.8s (x=850) -->
+  <line x1="850" y1="54" x2="850" y2="62" stroke="#888" stroke-width="1"/>
+  <text x="850" y="74" text-anchor="middle" font-size="9" fill="#888" font-family="Segoe UI, Arial, sans-serif">1.8</text>
+  <!-- t=2.0s (x=930) -->
+  <line x1="930" y1="52" x2="930" y2="64" stroke="#333" stroke-width="1.5"/>
+  <text x="930" y="74" text-anchor="middle" font-size="10" fill="#555" font-family="Segoe UI, Arial, sans-serif">2.0</text>
+
+  <!-- Vertical grid lines at major points -->
+  <g stroke="#e0e0e0" stroke-width="0.5" stroke-dasharray="3,3">
+    <line x1="210" y1="58" x2="210" y2="420"/>
+    <line x1="290" y1="58" x2="290" y2="420"/>
+    <line x1="370" y1="58" x2="370" y2="420"/>
+    <line x1="450" y1="58" x2="450" y2="420"/>
+    <line x1="610" y1="58" x2="610" y2="420"/>
+    <line x1="690" y1="58" x2="690" y2="420"/>
+    <line x1="770" y1="58" x2="770" y2="420"/>
+    <line x1="850" y1="58" x2="850" y2="420"/>
+  </g>
+  <!-- Stronger grid at 1s and 2s -->
+  <line x1="530" y1="58" x2="530" y2="420" stroke="#bdbdbd" stroke-width="0.8" stroke-dasharray="4,4"/>
+  <line x1="930" y1="58" x2="930" y2="420" stroke="#bdbdbd" stroke-width="0.8" stroke-dasharray="4,4"/>
+
+  <!-- ============================================================ -->
+  <!-- ROW 1: Timer1 Counter (TCNT1)                                -->
+  <!-- ============================================================ -->
+  <!-- Row background -->
+  <rect x="130" y="85" width="800" height="45" fill="#fff" stroke="#e0e0e0" stroke-width="0.5"/>
+  <!-- Label -->
+  <rect x="15" y="85" width="110" height="45" rx="4" fill="url(#t1Grad)" filter="url(#shadow)"/>
+  <text x="70" y="105" text-anchor="middle" font-size="10" font-weight="bold" fill="#fff" font-family="Segoe UI, Arial, sans-serif">Timer1 Counter</text>
+  <text x="70" y="120" text-anchor="middle" font-size="8" fill="#ffcdd2" font-family="Segoe UI, Arial, sans-serif">(TCNT1)</text>
+
+  <!-- Sawtooth: t=0 count=0 → t=1s count=31249 → reset → t=2s count=31249 -->
+  <!-- Row y: 85 to 130 (height 45). y=130 = count 0, y=85 = count 31249 -->
+  <!-- x from 130 to 930, span=800 for 2s. 1s at x=530 -->
+  <polyline points="130,130 530,85 530,130 930,85"
+            fill="none" stroke="#c62828" stroke-width="2" stroke-linejoin="round"/>
+  <!-- Peak label at 1s -->
+  <line x1="530" y1="85" x2="530" y2="64" stroke="#c62828" stroke-width="1" stroke-dasharray="2,2"/>
+  <text x="530" y="60" text-anchor="middle" font-size="9" fill="#c62828" font-weight="bold" font-family="Segoe UI, Arial, sans-serif">OCR1A=31249</text>
+  <!-- Second peak label -->
+  <line x1="930" y1="85" x2="930" y2="64" stroke="#c62828" stroke-width="1" stroke-dasharray="2,2"/>
+  <text x="930" y="60" text-anchor="middle" font-size="9" fill="#c62828" font-weight="bold" font-family="Segoe UI, Arial, sans-serif">OCR1A=31249</text>
+
+  <!-- Reset annotation -->
+  <text x="530" y="143" text-anchor="middle" font-size="8" fill="#666" font-family="Segoe UI, Arial, sans-serif">TCNT1 reset</text>
+  <line x1="528" y1="136" x2="530" y2="130" stroke="#999" stroke-width="0.8" marker-end="url(#arrowhead)"/>
+  <line x1="532" y1="136" x2="530" y2="130" stroke="#999" stroke-width="0.8"/>
+
+  <!-- ============================================================ -->
+  <!-- ROW 2: Timer1 ISR                                             -->
+  <!-- ============================================================ -->
+  <rect x="130" y="155" width="800" height="28" fill="#fff" stroke="#e0e0e0" stroke-width="0.5"/>
+  <rect x="15" y="155" width="110" height="28" rx="4" fill="url(#t1Grad)" filter="url(#shadow)"/>
+  <text x="70" y="173" text-anchor="middle" font-size="10" font-weight="bold" fill="#fff" font-family="Segoe UI, Arial, sans-serif">Timer1 ISR</text>
+
+  <!-- NO pulse at t=0 (corrected: removed erroneous first T block) -->
+  
+  <!-- Pulse at t=1s (x=530) -->
+  <rect x="516" y="155" width="28" height="28" rx="3" fill="#c62828" filter="url(#glow-red)"/>
+  <text x="530" y="173" text-anchor="middle" font-size="11" font-weight="bold" fill="#fff" font-family="Segoe UI, Arial, sans-serif">T</text>
+  
+  <!-- Pulse at t=2s (x=930) -->
+  <rect x="916" y="155" width="28" height="28" rx="3" fill="#c62828" filter="url(#glow-red)"/>
+  <text x="930" y="173" text-anchor="middle" font-size="11" font-weight="bold" fill="#fff" font-family="Segoe UI, Arial, sans-serif">T</text>
+
+  <!-- Annotation: first ISR fires at +1s -->
+  <text x="530" y="195" text-anchor="middle" font-size="8.5" fill="#c62828" font-weight="bold" font-family="Segoe UI, Arial, sans-serif">First compare match occurs here (t = 1.0 s)</text>
+
+  <!-- ============================================================ -->
+  <!-- ROW 3: Timer2 Counter (TCNT2)                                -->
+  <!-- ============================================================ -->
+  <rect x="130" y="215" width="800" height="45" fill="#fff" stroke="#e0e0e0" stroke-width="0.5"/>
+  <rect x="15" y="215" width="110" height="45" rx="4" fill="url(#t2Grad)" filter="url(#shadow)"/>
+  <text x="70" y="235" text-anchor="middle" font-size="10" font-weight="bold" fill="#fff" font-family="Segoe UI, Arial, sans-serif">Timer2 Counter</text>
+  <text x="70" y="250" text-anchor="middle" font-size="8" fill="#c8e6c9" font-family="Segoe UI, Arial, sans-serif">(TCNT2)</text>
+
+  <!-- Timer2 fast sawtooth - show a few cycles at start, then // break, then cycles around 1s -->
+  <!-- y-range: 215 to 260 (height 45). y=260 = count 0, y=215 = count 249 -->
+  <!-- Each cycle spans ~2ms. At 400px/s = 0.8px/cycle, invisible. Use expanded view -->
+  
+  <!-- Section 1: First ~10ms expanded (5 cycles, each ~30px wide) -->
+  <polyline points="
+    130,260 160,215 160,260
+    190,215 190,260
+    220,215 220,260
+    250,215 250,260
+    280,215 280,260
+    310,215 310,260
+  " fill="none" stroke="#2e7d32" stroke-width="1.8"/>
+  
+  <!-- Section 2: Around 1s mark (show 3 cycles around x=530) -->
+  <polyline points="
+    490,260 510,215 510,260
+    530,215 530,260
+    550,215 550,260
+    570,215 570,260
+  " fill="none" stroke="#2e7d32" stroke-width="1.8"/>
+
+  <!-- Section 3: Around 2s mark -->
+  <polyline points="
+    890,260 910,215 910,260
+    930,215 930,260
+  " fill="none" stroke="#2e7d32" stroke-width="1.8"/>
+
+  <!-- Break indicators -->
+  <rect x="315" y="225" width="12" height="25" rx="2" fill="#fafafa" stroke="#999" stroke-width="0.8"/>
+  <text x="321" y="241" text-anchor="middle" font-size="11" fill="#999" font-family="Segoe UI, Arial, sans-serif">/</text>
+  <text x="321" y="243" text-anchor="middle" font-size="8" fill="#999" font-family="Segoe UI, Arial, sans-serif">/</text>
+
+  <rect x="575" y="225" width="12" height="25" rx="2" fill="#fafafa" stroke="#999" stroke-width="0.8"/>
+  <text x="581" y="241" text-anchor="middle" font-size="11" fill="#999" font-family="Segoe UI, Arial, sans-serif">/</text>
+  <text x="581" y="243" text-anchor="middle" font-size="8" fill="#999" font-family="Segoe UI, Arial, sans-serif">/</text>
+
+  <!-- Period annotation on first cycle -->
+  <text x="145" y="207" text-anchor="middle" font-size="7.5" fill="#2e7d32" font-family="Segoe UI, Arial, sans-serif">2 ms</text>
+  <line x1="130" y1="210" x2="160" y2="210" stroke="#2e7d32" stroke-width="0.8"/>
+  <line x1="130" y1="208" x2="130" y2="212" stroke="#2e7d32" stroke-width="0.8"/>
+  <line x1="160" y1="208" x2="160" y2="212" stroke="#2e7d32" stroke-width="0.8"/>
+
+  <!-- OCR2 label -->
+  <text x="930" y="207" text-anchor="end" font-size="8.5" fill="#2e7d32" font-weight="bold" font-family="Segoe UI, Arial, sans-serif">OCR2 = 249 (0xF9)</text>
+
+  <!-- ============================================================ -->
+  <!-- ROW 4: Timer2 ISR                                            -->
+  <!-- ============================================================ -->
+  <rect x="130" y="275" width="800" height="28" fill="#fff" stroke="#e0e0e0" stroke-width="0.5"/>
+  <rect x="15" y="275" width="110" height="28" rx="4" fill="url(#t2Grad)" filter="url(#shadow)"/>
+  <text x="70" y="293" text-anchor="middle" font-size="10" font-weight="bold" fill="#fff" font-family="Segoe UI, Arial, sans-serif">Timer2 ISR</text>
+
+  <!-- Timer2 ISR pulses (green) - every 2ms -->
+  <!-- At 400px/s, 2ms = 0.8px. Not visible at full scale. Show as dense blocks -->
+  <!-- Use representative pulses -->
+  
+  <!-- Pulses at expanded start section -->
+  <rect x="132" y="282" width="4" height="14" rx="1" fill="#2e7d32"/>
+  <rect x="162" y="282" width="4" height="14" rx="1" fill="#2e7d32"/>
+  <rect x="192" y="282" width="4" height="14" rx="1" fill="#2e7d32"/>
+  <rect x="222" y="282" width="4" height="14" rx="1" fill="#2e7d32"/>
+  <rect x="252" y="282" width="4" height="14" rx="1" fill="#2e7d32"/>
+  <rect x="282" y="282" width="4" height="14" rx="1" fill="#2e7d32"/>
+  <rect x="312" y="282" width="4" height="14" rx="1" fill="#2e7d32"/>
+
+  <!-- Pulses around 1s mark -->
+  <rect x="492" y="282" width="4" height="14" rx="1" fill="#2e7d32"/>
+  <rect x="512" y="282" width="4" height="14" rx="1" fill="#2e7d32"/>
+  <rect x="532" y="282" width="4" height="14" rx="1" fill="#2e7d32"/>
+  <rect x="552" y="282" width="4" height="14" rx="1" fill="#2e7d32"/>
+  <rect x="572" y="282" width="4" height="14" rx="1" fill="#2e7d32"/>
+
+  <!-- Pulses around 2s mark -->
+  <rect x="892" y="282" width="4" height="14" rx="1" fill="#2e7d32"/>
+  <rect x="912" y="282" width="4" height="14" rx="1" fill="#2e7d32"/>
+  <rect x="932" y="282" width="4" height="14" rx="1" fill="#2e7d32"/>
+
+  <!-- tick=500 annotation at 1s mark (Timer2's own tick, no connection to Timer1) -->
+  <text x="540" y="318" text-anchor="start" font-size="8" fill="#2e7d32" font-weight="bold" font-family="Segoe UI, Arial, sans-serif">tick=500: Heartbeat LED toggle</text>
+  <!-- Small downward arrow from Timer2 ISR area -->
+  <line x1="532" y1="303" x2="532" y2="308" stroke="#2e7d32" stroke-width="0.8"/>
+  <line x1="528" y1="308" x2="536" y2="308" stroke="#2e7d32" stroke-width="0.8"/>
+
+  <!-- ============================================================ -->
+  <!-- ROW 5: Heartbeat LED (PD4)                                   -->
+  <!-- ============================================================ -->
+  <rect x="130" y="328" width="800" height="32" fill="#fff" stroke="#e0e0e0" stroke-width="0.5"/>
+  <rect x="15" y="328" width="110" height="32" rx="4" fill="url(#ledGrad)" filter="url(#shadow)"/>
+  <text x="70" y="348" text-anchor="middle" font-size="10" font-weight="bold" fill="#fff" font-family="Segoe UI, Arial, sans-serif">Heartbeat LED</text>
+
+  <!-- LED state: OFF from t=0 to t=1s (LOW), ON from t=1s to t=2s (HIGH), OFF after t=2s -->
+  <!-- y=360 for LOW, y=328 for HIGH -->
+  
+  <!-- t=0 to t=1s: LOW -->
+  <line x1="130" y1="352" x2="530" y2="352" stroke="#f57f17" stroke-width="2.5"/>
+  <!-- t=1s: rising edge -->
+  <line x1="530" y1="352" x2="530" y2="335" stroke="#f57f17" stroke-width="2"/>
+  <!-- t=1s to t=2s: HIGH -->
+  <line x1="530" y1="335" x2="930" y2="335" stroke="#f57f17" stroke-width="2.5"/>
+  <!-- t=2s: falling edge -->
+  <line x1="930" y1="335" x2="930" y2="352" stroke="#f57f17" stroke-width="2"/>
+
+  <!-- State labels -->
+  <text x="330" y="364" text-anchor="middle" font-size="8.5" fill="#888" font-family="Segoe UI, Arial, sans-serif">LED OFF</text>
+  <text x="730" y="347" text-anchor="middle" font-size="8.5" fill="#f57f17" font-weight="bold" font-family="Segoe UI, Arial, sans-serif">LED ON (PD4 HIGH)</text>
+
+  <!-- ============================================================ -->
+  <!-- ROW 6: UART Activity                                         -->
+  <!-- ============================================================ -->
+  <rect x="130" y="378" width="800" height="32" fill="#fff" stroke="#e0e0e0" stroke-width="0.5"/>
+  <rect x="15" y="378" width="110" height="32" rx="4" fill="url(#uartGrad)" filter="url(#shadow)"/>
+  <text x="70" y="398" text-anchor="middle" font-size="10" font-weight="bold" fill="#fff" font-family="Segoe UI, Arial, sans-serif">UART Activity</text>
+
+  <!-- Idle from t=0 to just after t=1s -->
+  <line x1="130" y1="395" x2="545" y2="395" stroke="#00838f" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="340" y="404" text-anchor="middle" font-size="7.5" fill="#999" font-family="Segoe UI, Arial, sans-serif">Idle (no activity)</text>
+
+  <!-- TX 'C' starts immediately after Timer1 ISR at ~1s -->
+  <!-- Timer1 ISR at x=530, so TX starts at ~x=540 (small processing delay) -->
+  <!-- TX 'C' takes ~1.042ms ≈ 0.42px at this scale. Show as a narrow block -->
+  <rect x="545" y="382" width="28" height="22" rx="3" fill="#00acc1"/>
+  <text x="559" y="397" text-anchor="middle" font-size="8" font-weight="bold" fill="#fff" font-family="Segoe UI, Arial, sans-serif">TX 'C'</text>
+  
+  <!-- Wait RX state -->
+  <rect x="578" y="382" width="60" height="22" rx="3" fill="#e0f7fa" stroke="#00acc1" stroke-width="0.8"/>
+  <text x="608" y="397" text-anchor="middle" font-size="8" fill="#00838f" font-family="Segoe UI, Arial, sans-serif">Wait RX</text>
+
+  <!-- RX response (small, variable delay) -->
+  <rect x="643" y="382" width="28" height="22" rx="3" fill="#00838f"/>
+  <text x="657" y="397" text-anchor="middle" font-size="8" font-weight="bold" fill="#fff" font-family="Segoe UI, Arial, sans-serif">RX</text>
+  
+  <!-- Back to idle -->
+  <line x1="676" y1="395" x2="930" y2="395" stroke="#00838f" stroke-width="1" stroke-dasharray="3,2"/>
+
+  <!-- Causal arrow from Timer1 ISR to TX 'C' -->
+  <line x1="530" y1="183" x2="530" y2="375" stroke="#c62828" stroke-width="0.8" stroke-dasharray="3,3" opacity="0.4"/>
+  <text x="500" y="282" text-anchor="end" font-size="7.5" fill="#c62828" font-family="Segoe UI, Arial, sans-serif">triggers temp_request</text>
+  <polygon points="530,375 526,365 534,365" fill="#c62828" opacity="0.4"/>
+
+  <!-- ============================================================ -->
+  <!-- ROW 7: Colon / Edit Cursor Blink                            -->
+  <!-- ============================================================ -->
+  <rect x="130" y="420" width="800" height="28" fill="#fff" stroke="#e0e0e0" stroke-width="0.5"/>
+  <rect x="15" y="420" width="110" height="28" rx="4" fill="url(#blinkGrad)" filter="url(#shadow)"/>
+  <text x="70" y="438" text-anchor="middle" font-size="10" font-weight="bold" fill="#fff" font-family="Segoe UI, Arial, sans-serif">Colon/Cursor</text>
+
+  <!-- Colon blink: ON when seconds is odd (0→1, 2→3, etc.) -->
+  <!-- t=0→1s: seconds=0 (even) → OFF; t=1→2s: seconds=1 (odd) → ON -->
+  <!-- Actually at t=0, seconds=0 (even), colon OFF. After first timer1 ISR at 1s, seconds=1 (odd), colon ON -->
+  
+  <!-- t=0 to t=1s: OFF -->
+  <line x1="130" y1="434" x2="530" y2="434" stroke="#8e24aa" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="330" y="443" text-anchor="middle" font-size="7.5" fill="#999" font-family="Segoe UI, Arial, sans-serif">OFF (seconds even)</text>
+  
+  <!-- t=1s to t=2s: ON (seconds odd) -->
+  <line x1="530" y1="434" x2="930" y2="434" stroke="#8e24aa" stroke-width="2.5"/>
+  <text x="730" y="443" text-anchor="middle" font-size="7.5" fill="#8e24aa" font-weight="bold" font-family="Segoe UI, Arial, sans-serif">ON (seconds odd)</text>
+
+  <!-- Annotation: blink derived from seconds parity -->
+  <line x1="530" y1="183" x2="530" y2="415" stroke="#8e24aa" stroke-width="0.8" stroke-dasharray="2,4" opacity="0.3"/>
+  <text x="540" y="305" text-anchor="start" font-size="7.5" fill="#8e24aa" font-family="Segoe UI, Arial, sans-serif">seconds parity drives colon</text>
+
+  <!-- ============================================================ -->
+  <!-- TIMING SUMMARY TABLE                                         -->
+  <!-- ============================================================ -->
+  
+  <!-- Table background -->
+  <rect x="30" y="470" width="940" height="26" rx="4" fill="#1a237e"/>
+  <text x="500" y="488" text-anchor="middle" font-size="12" font-weight="bold" fill="#fff" font-family="Segoe UI, Arial, sans-serif">Timing Summary</text>
+
+  <!-- Table header -->
+  <rect x="30" y="496" width="940" height="24" fill="#e8eaf6" stroke="#c5cae9" stroke-width="0.5"/>
+  <text x="55" y="513" font-size="9" font-weight="bold" fill="#1a237e" font-family="Segoe UI, Arial, sans-serif">Signal</text>
+  <text x="215" y="513" font-size="9" font-weight="bold" fill="#1a237e" font-family="Segoe UI, Arial, sans-serif">Peripheral</text>
+  <text x="365" y="513" font-size="9" font-weight="bold" fill="#1a237e" font-family="Segoe UI, Arial, sans-serif">Prescaler</text>
+  <text x="495" y="513" font-size="9" font-weight="bold" fill="#1a237e" font-family="Segoe UI, Arial, sans-serif">OCR / Compare Value</text>
+  <text x="695" y="513" font-size="9" font-weight="bold" fill="#1a237e" font-family="Segoe UI, Arial, sans-serif">Period</text>
+  <text x="870" y="513" font-size="9" font-weight="bold" fill="#1a237e" font-family="Segoe UI, Arial, sans-serif">Description</text>
+
+  <!-- Row 1: Clock second tick -->
+  <rect x="30" y="520" width="940" height="22" fill="#fff" stroke="#e0e0e0" stroke-width="0.3"/>
+  <rect x="35" y="522" width="12" height="18" rx="2" fill="#c62828"/>
+  <text x="55" y="535" font-size="9" fill="#333" font-family="Segoe UI, Arial, sans-serif">Clock second tick</text>
+  <text x="215" y="535" font-size="9" fill="#555" font-family="Segoe UI, Arial, sans-serif">Timer1 (16-bit)</text>
+  <text x="365" y="535" font-size="9" fill="#555" font-family="Segoe UI, Arial, sans-serif">/256 (CS12)</text>
+  <text x="495" y="535" font-size="9" fill="#333" font-weight="bold" font-family="Segoe UI, Arial, sans-serif">OCR1A = 31249</text>
+  <text x="695" y="535" font-size="9" fill="#555" font-family="Segoe UI, Arial, sans-serif">1.000 s</text>
+  <text x="870" y="535" font-size="9" fill="#666" font-family="Segoe UI, Arial, sans-serif">Real-time clock update</text>
+
+  <!-- Row 2: Display mux tick -->
+  <rect x="30" y="542" width="940" height="22" fill="#f5f5f5" stroke="#e0e0e0" stroke-width="0.3"/>
+  <rect x="35" y="544" width="12" height="18" rx="2" fill="#2e7d32"/>
+  <text x="55" y="557" font-size="9" fill="#333" font-family="Segoe UI, Arial, sans-serif">Display mux tick</text>
+  <text x="215" y="557" font-size="9" fill="#555" font-family="Segoe UI, Arial, sans-serif">Timer2 (8-bit)</text>
+  <text x="365" y="557" font-size="9" fill="#555" font-family="Segoe UI, Arial, sans-serif">/64 (CS22)</text>
+  <text x="495" y="557" font-size="9" fill="#333" font-weight="bold" font-family="Segoe UI, Arial, sans-serif">OCR2 = 249 (0xF9)</text>
+  <text x="695" y="557" font-size="9" fill="#555" font-family="Segoe UI, Arial, sans-serif">2 ms</text>
+  <text x="870" y="557" font-size="9" fill="#666" font-family="Segoe UI, Arial, sans-serif">Digit multiplex, keypad scan</text>
+
+  <!-- Row 3: UART baud rate -->
+  <rect x="30" y="564" width="940" height="22" fill="#fff" stroke="#e0e0e0" stroke-width="0.3"/>
+  <rect x="35" y="566" width="12" height="18" rx="2" fill="#00acc1"/>
+  <text x="55" y="579" font-size="9" fill="#333" font-family="Segoe UI, Arial, sans-serif">UART communication</text>
+  <text x="215" y="579" font-size="9" fill="#555" font-family="Segoe UI, Arial, sans-serif">USART (async)</text>
+  <text x="365" y="579" font-size="9" fill="#555" font-family="Segoe UI, Arial, sans-serif">—</text>
+  <text x="495" y="579" font-size="9" fill="#333" font-weight="bold" font-family="Segoe UI, Arial, sans-serif">UBRR = 51 (0x33)</text>
+  <text x="695" y="579" font-size="9" fill="#555" font-family="Segoe UI, Arial, sans-serif">104.17 µs/bit</text>
+  <text x="870" y="579" font-size="9" fill="#666" font-family="Segoe UI, Arial, sans-serif">9600 baud, 8N1</text>
+
+  <!-- Row 4: Heartbeat LED -->
+  <rect x="30" y="586" width="940" height="22" fill="#f5f5f5" stroke="#e0e0e0" stroke-width="0.3"/>
+  <rect x="35" y="588" width="12" height="18" rx="2" fill="#f57f17"/>
+  <text x="55" y="601" font-size="9" fill="#333" font-family="Segoe UI, Arial, sans-serif">Heartbeat LED</text>
+  <text x="215" y="601" font-size="9" fill="#555" font-family="Segoe UI, Arial, sans-serif">Timer2 ticks</text>
+  <text x="365" y="601" font-size="9" fill="#555" font-family="Segoe UI, Arial, sans-serif">—</text>
+  <text x="495" y="601" font-size="9" fill="#333" font-weight="bold" font-family="Segoe UI, Arial, sans-serif">500 × 2 ms</text>
+  <text x="695" y="601" font-size="9" fill="#555" font-family="Segoe UI, Arial, sans-serif">1.0 s</text>
+  <text x="870" y="601" font-size="9" fill="#666" font-family="Segoe UI, Arial, sans-serif">PD4 toggle (500 ticks)</text>
+
+  <!-- Row 5: Edit cursor blink -->
+  <rect x="30" y="608" width="940" height="22" fill="#fff" stroke="#e0e0e0" stroke-width="0.3"/>
+  <rect x="35" y="610" width="12" height="18" rx="2" fill="#8e24aa"/>
+  <text x="55" y="623" font-size="9" fill="#333" font-family="Segoe UI, Arial, sans-serif">Edit cursor blink</text>
+  <text x="215" y="623" font-size="9" fill="#555" font-family="Segoe UI, Arial, sans-serif">Timer2 ticks</text>
+  <text x="365" y="623" font-size="9" fill="#555" font-family="Segoe UI, Arial, sans-serif">—</text>
+  <text x="495" y="623" font-size="9" fill="#333" font-weight="bold" font-family="Segoe UI, Arial, sans-serif">64 × 2 ms (tick &gt;&gt; 6)</text>
+  <text x="695" y="623" font-size="9" fill="#555" font-family="Segoe UI, Arial, sans-serif">128 ms on/off</text>
+  <text x="870" y="623" font-size="9" fill="#666" font-family="Segoe UI, Arial, sans-serif">~3.9 Hz blink rate</text>
+
+  <!-- Row 6: Frame refresh -->
+  <rect x="30" y="630" width="940" height="22" fill="#f5f5f5" stroke="#e0e0e0" stroke-width="0.3"/>
+  <rect x="35" y="632" width="12" height="18" rx="2" fill="#6a1b9a"/>
+  <text x="55" y="645" font-size="9" fill="#333" font-family="Segoe UI, Arial, sans-serif">Full display frame</text>
+  <text x="215" y="645" font-size="9" fill="#555" font-family="Segoe UI, Arial, sans-serif">Timer2 × 6 digit</text>
+  <text x="365" y="645" font-size="9" fill="#555" font-family="Segoe UI, Arial, sans-serif">—</text>
+  <text x="495" y="645" font-size="9" fill="#333" font-weight="bold" font-family="Segoe UI, Arial, sans-serif">6 × 2 ms</text>
+  <text x="695" y="645" font-size="9" fill="#555" font-family="Segoe UI, Arial, sans-serif">12 ms</text>
+  <text x="870" y="645" font-size="9" fill="#666" font-family="Segoe UI, Arial, sans-serif">~83.3 Hz refresh rate</text>
+
+</svg>

@@ -1,0 +1,27 @@
+# Build artifacts
+*.hex
+*.o
+*.elf
+*.obj
+*.lst
+*.map
+*.eep
+
+# Proteus simulation
+Proteus/debug.log
+Proteus/Project Backups/
+**/*.workspace
+**/*.pdsprj.*
+*.pdsbad
+*.bak
+*.backup
+
+# CodeVisionAVR
+*.prj
+*.cwp
+*.cwe
+
+# OS
+Thumbs.db
+.DS_Store
+Desktop.ini
