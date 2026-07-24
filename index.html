@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ATmega32 — AVR Cycle-Accurate Simulator</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0d1117;--bg2:#161b22;--bg3:#1c2333;--border:#30363d;
+  --text:#c9d1d9;--text2:#8b949e;--blue:#58a6ff;--blue2:#1f6feb;
+  --green:#3fb950;--orange:#d29922;--red:#f85149;--purple:#bc8cff;
+  --cyan:#39d2c0;--pink:#db61a2;--yellow:#e3b341;
+}
+html{font-size:14px}
+body{font-family:'JetBrains Mono',monospace;background:var(--bg);color:var(--text);line-height:1.5;overflow-x:hidden}
+::-webkit-scrollbar{width:8px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+/* Status bar */
+#statusbar{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  background:var(--bg2);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 16px;height:36px;gap:12px;flex-wrap:wrap;
+  font-size:10px;
+}
+#statusbar .brand{font-weight:600;color:var(--blue);font-size:11px;white-space:nowrap}
+#statusbar .divider{width:1px;height:20px;background:var(--border)}
+.status-item{color:var(--text2);white-space:nowrap}
+.status-item span{color:var(--blue)}
+.status-item.ok span{color:var(--green)}
+.status-item.warn span{color:var(--orange)}
+#speedGroup{display:flex;gap:2px;margin-left:auto}
+#speedGroup button{
+  background:var(--bg3);border:1px solid var(--border);color:var(--text2);
+  padding:2px 8px;cursor:pointer;font-size:9px;font-family:'JetBrains Mono',monospace;
+  border-radius:2px;transition:.15s;
+}
+#speedGroup button:hover{color:var(--text);border-color:var(--text2)}
+#speedGroup button.active{background:var(--blue2);border-color:var(--blue);color:#fff}
+
+#nav{
+  position:fixed;top:36px;left:0;right:0;z-index:99;
+  background:var(--bg);border-bottom:1px solid var(--border);
+  display:flex;padding:0 16px;height:30px;align-items:center;gap:0;
+}
+#nav a{
+  color:var(--text2);text-decoration:none;font-size:10px;padding:4px 12px;
+  border-radius:3px 3px 0 0;transition:.15s;border-bottom:2px solid transparent;
+  white-space:nowrap;
+}
+#nav a:hover{color:var(--text);background:var(--bg3)}
+#nav a.active{color:var(--blue);border-bottom-color:var(--blue);background:var(--bg3)}
+
+#content{margin-top:70px;padding:16px;max-width:1400px;margin-left:auto;margin-right:auto}
+.section{display:none;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:20px;margin-bottom:16px}
+.section.active{display:block}
+.section h2{font-size:14px;font-weight:600;color:var(--blue);margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.section h3{font-size:12px;font-weight:500;color:var(--text);margin:10px 0 6px}
+
+.cols2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.cols3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.cols2-1{display:grid;grid-template-columns:2fr 1fr;gap:12px}
+@media(max-width:1000px){.cols2,.cols3,.cols2-1{grid-template-columns:1fr}}
+
+/* Block diagram */
+.block-diagram{background:var(--bg3);border-radius:6px;border:1px solid var(--border);padding:10px;overflow:hidden}
+.block-diagram svg{width:100%;height:auto;display:block}
+.block{cursor:pointer;transition:.3s}
+.block:hover,.block.highlighted{filter:drop-shadow(0 0 6px var(--blue))}
+.block-cpu{fill:var(--blue2);stroke:var(--blue)}
+.block-input{fill:#1a2332;stroke:var(--orange)}
+.block-output{fill:#0a1f14;stroke:var(--green)}
+.block-sensor{fill:#1a0a2e;stroke:var(--purple)}
+.block-periph{fill:#2a0a0a;stroke:var(--red)}
+.info-panel{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:12px;font-size:10px;line-height:1.6;min-height:60px}
+.tag{display:inline-block;padding:1px 6px;border-radius:3px;font-size:8px;font-weight:500}
+.tag-blue{background:var(--blue2);color:#fff}
+.tag-green{background:#0f3d1e;color:var(--green)}
+.tag-orange{background:#3d270f;color:var(--orange)}
+.tag-purple{background:#1f0f3d;color:var(--purple)}
+
+/* Firmware layers */
+.fw-layer{border-radius:4px;border:1px solid var(--border);padding:6px 10px;margin:3px 0;cursor:pointer;transition:.15s;font-size:10px}
+.fw-layer:hover,.fw-layer.active{background:var(--bg3);border-color:var(--blue)}
+.fw-layer .fn{color:var(--text2);font-size:9px}
+.fw-app{border-left:3px solid var(--blue)}
+.fw-hal{border-left:3px solid var(--green)}
+.fw-hw{border-left:3px solid var(--orange)}
+
+/* Workflow */
+.workflow-step{display:flex;align-items:center;gap:8px;padding:5px 10px;border-left:2px solid var(--border);margin:0 0 0 10px;cursor:pointer;transition:.2s;font-size:10px}
+.workflow-step:last-child{border-left-color:transparent}
+.workflow-step .dot{width:7px;height:7px;border-radius:50%;background:var(--border);flex-shrink:0;margin-left:-14px;transition:.2s}
+.workflow-step.active .dot{background:var(--blue);box-shadow:0 0 6px var(--blue)}
+.workflow-step.active{color:var(--blue);border-left-color:var(--blue)}
+.workflow-step .fn{color:var(--text2);font-size:8px}
+
+/* 7-segment */
+.display-container{background:#080808;border-radius:6px;padding:16px;border:1px solid #1a1a1a}
+.digits{display:flex;gap:3px;justify-content:center;align-items:center;margin:8px 0}
+.digit-wrap{width:38px;height:62px;transition:.05s;opacity:.6}
+.digit-wrap.active{opacity:1;filter:drop-shadow(0 0 5px rgba(255,51,51,.4))}
+.digit-wrap svg{width:100%;height:100%;display:block}
+.seg-on{fill:#ff3333;transition:.05s}
+.seg-off{fill:#2a0808;transition:.05s}
+.seg-dp-on{fill:#ff3333;transition:.05s}
+.seg-dp-off{fill:#2a0808}
+.colon-dot{width:3px;height:3px;border-radius:50%;margin:2px 0;transition:.1s}
+.display-info{display:flex;justify-content:center;gap:10px;margin-top:6px;font-size:9px;color:var(--text2)}
+.display-info span{background:var(--bg3);padding:3px 8px;border-radius:3px}
+
+/* UART */
+.uart-vis{background:var(--bg3);border-radius:6px;padding:12px;border:1px solid var(--border);margin:6px 0}
+.uart-frame{display:flex;gap:1px;padding:3px;background:var(--bg);border-radius:3px}
+.uart-bit{width:16px;height:22px;display:flex;align-items:center;justify-content:center;font-size:7px;border-radius:2px}
+.uart-bit.start{background:var(--red);color:#fff}
+.uart-bit.data{background:var(--bg3);color:var(--text)}
+.uart-bit.stop{background:var(--green);color:#fff}
+
+/* Registers */
+.reg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:6px}
+.reg-card{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:8px;cursor:pointer;transition:.15s;font-size:9px}
+.reg-card:hover,.reg-card.active{border-color:var(--blue);background:var(--bg2)}
+.reg-card .reg-name{color:var(--cyan);font-weight:500;font-size:10px}
+.reg-card .reg-val{color:var(--text2)}
+.reg-bits{display:flex;gap:1px;margin-top:4px}
+.reg-bit{width:18px;height:18px;display:flex;align-items:center;justify-content:center;border-radius:2px;font-size:7px;font-weight:500}
+.reg-bit.bit-1{background:var(--blue2);color:#fff}
+.reg-bit.bit-0{background:var(--bg);color:var(--text2)}
+
+/* Signal flow */
+.signal-flow{position:relative;width:100%;height:90px;background:var(--bg3);border-radius:6px;border:1px solid var(--border);overflow:hidden}
+.signal-node{position:absolute;top:50%;transform:translateY(-50%);background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:5px 8px;font-size:8px;text-align:center;z-index:2;transition:.2s}
+.signal-node.active{border-color:var(--blue);background:var(--blue2)}
+.flow-particle{position:absolute;width:6px;height:6px;border-radius:50%;background:var(--blue);top:50%;z-index:1;pointer-events:none}
+
+/* Timeline */
+.timeline{background:var(--bg3);border:1px solid var(--border);border-radius:6px;height:180px;overflow-y:auto;padding:6px;font-size:9px}
+.timeline .entry{padding:1px 4px;border-bottom:1px solid var(--border);display:flex;gap:6px}
+.timeline .time{color:var(--text2);flex-shrink:0}
+.timeline .tag{color:var(--blue);flex-shrink:0}
+.timeline .tag-ok{color:var(--green)}
+.timeline .tag-event{color:var(--orange)}
+.timeline .tag-action{color:var(--purple)}
+.timeline .tag-uart{color:var(--cyan)}
+
+/* Controls */
+.ctrl-bar{display:flex;gap:6px;align-items:center;margin:8px 0;flex-wrap:wrap}
+.ctrl-bar button{
+  background:var(--bg3);border:1px solid var(--border);color:var(--text);
+  padding:4px 12px;border-radius:3px;cursor:pointer;font-family:'JetBrains Mono',monospace;
+  font-size:9px;transition:.15s;
+}
+.ctrl-bar button:hover{background:var(--blue2);border-color:var(--blue);color:#fff}
+.ctrl-bar button.active{background:var(--blue2);border-color:var(--blue);color:#fff}
+.status-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:3px}
+.status-dot.green{background:var(--green)}
+.status-dot.red{background:var(--red)}
+.status-dot.cyan{background:var(--cyan)}
+.status-dot.orange{background:var(--orange)}
+
+/* Debug panel */
+#debugPanel{
+  background:var(--bg3);border:1px solid var(--border);border-radius:6px;
+  padding:12px;font-size:10px;font-family:'JetBrains Mono',monospace;line-height:1.7;
+}
+#debugPanel .row{display:flex;gap:16px;flex-wrap:wrap}
+#debugPanel .col{flex:1;min-width:160px}
+#debugPanel .label{color:var(--text2);display:inline-block;width:100px}
+#debugPanel .value{color:var(--cyan);font-weight:500}
+#debugPanel .value.green{color:var(--green)}
+#debugPanel .value.orange{color:var(--orange)}
+#debugPanel .value.red{color:var(--red)}
+#debugPanel .divider{margin:4px 0;border:none;border-top:1px solid var(--border)}
+
+table{width:100%;border-collapse:collapse;font-size:9px;margin:6px 0}
+th,td{padding:4px 8px;text-align:left;border-bottom:1px solid var(--border)}
+th{color:var(--text2);font-weight:500;font-size:8px;text-transform:uppercase}
+.pulse{animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+</style>
+</head>
+<body>
+
+<!-- ====== STATUS BAR ====== -->
+<div id="statusbar">
+  <div class="brand">AVR&nbsp;<span style="font-weight:400;color:var(--text2)">Sim</span></div>
+  <div class="divider"></div>
+  <div class="status-item"><span class="status-dot green" id="simDot"></span><span id="simStatus">Running</span></div>
+  <div class="status-item">Speed: <span id="simSpeedLabel">1.00x</span></div>
+  <div class="status-item">Time: <span id="simTimeDisplay">00:00:00</span></div>
+  <div class="status-item">T2 ISR: <span id="simT2Count">0</span></div>
+  <div class="status-item ok">T2: <span id="simT2Rate">0</span> Hz</div>
+  <div class="divider"></div>
+  <div id="speedGroup">
+    <button data-speed="0.5">0.5x</button>
+    <button data-speed="1" class="active">1x</button>
+    <button data-speed="2">2x</button>
+    <button data-speed="10">10x</button>
+    <button data-speed="50">50x</button>
+  </div>
+</div>
+
+<!-- ====== NAV ====== -->
+<div id="nav">
+  <a href="#" class="active" data-section="s1">Architecture</a>
+  <a href="#" data-section="s2">Firmware</a>
+  <a href="#" data-section="s3">Workflow</a>
+  <a href="#" data-section="s4">Display+Debug</a>
+  <a href="#" data-section="s5">UART</a>
+  <a href="#" data-section="s6">Registers</a>
+  <a href="#" data-section="s7">SignalFlow</a>
+  <a href="#" data-section="s8">Timeline</a>
+</div>
+
+<div id="content">
+
+<!-- ============================================================ -->
+<!-- S1: SYSTEM ARCHITECTURE -->
+<!-- ============================================================ -->
+<div id="s1" class="section active">
+<h2>System Architecture — Interactive Block Diagram</h2>
+<div class="cols2-1">
+<div class="block-diagram">
+<svg viewBox="0 0 820 520" style="background:#0d1117;border-radius:6px">
+  <defs>
+    <marker id="a" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><polygon points="0 0,7 2.5,0 5" fill="#30363d"/></marker>
+    <marker id="ab" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><polygon points="0 0,7 2.5,0 5" fill="#58a6ff"/></marker>
+    <marker id="ag" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><polygon points="0 0,7 2.5,0 5" fill="#3fb950"/></marker>
+    <marker id="ao" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><polygon points="0 0,7 2.5,0 5" fill="#d29922"/></marker>
+    <marker id="ap" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><polygon points="0 0,7 2.5,0 5" fill="#bc8cff"/></marker>
+  </defs>
+  <rect x="15" y="40" width="180" height="320" rx="6" fill="none" stroke="#d29922" stroke-width="1" stroke-dasharray="4,3" opacity=".5"/>
+  <text x="105" y="54" text-anchor="middle" font-size="9" fill="#d29922" opacity=".7">Input Devices</text>
+  <rect x="600" y="40" width="200" height="270" rx="6" fill="none" stroke="#3fb950" stroke-width="1" stroke-dasharray="4,3" opacity=".5"/>
+  <text x="700" y="54" text-anchor="middle" font-size="9" fill="#3fb950" opacity=".7">Output Devices</text>
+
+  <!-- MCU -->
+  <rect x="230" y="55" width="340" height="310" rx="8" fill="var(--blue2)" stroke="var(--blue)" stroke-width="1.5" class="block" data-comp="mcu"/>
+  <text x="400" y="76" text-anchor="middle" font-size="12" font-weight="600" fill="#fff">ATmega32 @ 8 MHz</text>
+  <line x1="245" y1="82" x2="555" y2="82" stroke="#8bb9fe" stroke-width=".5"/>
+
+  <rect x="245" y="90" width="310" height="28" rx="4" fill="#0d1117" stroke="var(--border)" stroke-width="1" class="block" data-comp="cpu"/>
+  <text x="400" y="104" text-anchor="middle" font-size="9" font-weight="500" fill="var(--blue)">AVR CPU Core — 8-bit RISC</text>
+  <text x="400" y="114" text-anchor="middle" font-size="7" fill="var(--text2)">most instructions single-cycle @ 8 MHz</text>
+
+  <rect x="245" y="124" width="150" height="34" rx="4" fill="#0d1117" stroke="var(--border)" stroke-width="1" class="block" data-comp="timer1"/>
+  <text x="320" y="139" text-anchor="middle" font-size="9" fill="var(--cyan)" font-weight="500">Timer1 — 16-bit</text>
+  <text x="320" y="152" text-anchor="middle" font-size="7" fill="var(--text2)">CTC /256 OCR1A=31249</text>
+
+  <rect x="405" y="124" width="150" height="34" rx="4" fill="#0d1117" stroke="var(--border)" stroke-width="1" class="block" data-comp="timer2"/>
+  <text x="480" y="139" text-anchor="middle" font-size="9" fill="var(--cyan)" font-weight="500">Timer2 — 8-bit</text>
+  <text x="480" y="152" text-anchor="middle" font-size="7" fill="var(--text2)">CTC /64 OCR2=0xF9</text>
+
+  <rect x="245" y="164" width="150" height="34" rx="4" fill="#0d1117" stroke="var(--border)" stroke-width="1" class="block" data-comp="usart"/>
+  <text x="320" y="179" text-anchor="middle" font-size="9" fill="var(--purple)" font-weight="500">USART</text>
+  <text x="320" y="192" text-anchor="middle" font-size="7" fill="var(--text2)">9600 8N1 RX IRQ</text>
+
+  <rect x="405" y="164" width="150" height="34" rx="4" fill="#0d1117" stroke="var(--border)" stroke-width="1" class="block" data-comp="int"/>
+  <text x="480" y="179" text-anchor="middle" font-size="9" fill="var(--red)" font-weight="500">INT0 / INT1</text>
+  <text x="480" y="192" text-anchor="middle" font-size="7" fill="var(--text2)">Falling-edge ext IRQ</text>
+
+  <rect x="245" y="204" width="150" height="30" rx="4" fill="#1a2332" stroke="#d29922" stroke-width="1" class="block" data-comp="porta"/>
+  <text x="320" y="222" text-anchor="middle" font-size="9" fill="#d29922" font-weight="500">PORTA (PA0-3 keypad)</text>
+  <rect x="405" y="204" width="150" height="30" rx="4" fill="#0a1f14" stroke="#3fb950" stroke-width="1" class="block" data-comp="portb"/>
+  <text x="480" y="222" text-anchor="middle" font-size="9" fill="#3fb950" font-weight="500">PORTB (segments a-dp)</text>
+  <rect x="245" y="240" width="150" height="30" rx="4" fill="#0a1f14" stroke="#3fb950" stroke-width="1" class="block" data-comp="portc"/>
+  <text x="320" y="258" text-anchor="middle" font-size="9" fill="#3fb950" font-weight="500">PORTC (digit enable)</text>
+  <rect x="405" y="240" width="150" height="30" rx="4" fill="#1a0a2e" stroke="#bc8cff" stroke-width="1" class="block" data-comp="portd"/>
+  <text x="480" y="258" text-anchor="middle" font-size="9" fill="#bc8cff" font-weight="500">PORTD (UART+LED+INT)</text>
+
+  <rect x="245" y="278" width="310" height="42" rx="4" fill="#0d1117" stroke="var(--border)" stroke-width=".5" opacity=".6"/>
+  <text x="400" y="293" text-anchor="middle" font-size="8" fill="var(--text2)">Disabled: ADC / SPI / TWI / Analog Comp / Timer0</text>
+  <text x="400" y="305" text-anchor="middle" font-size="7" fill="#484f59">Disabled at startup to reduce power / avoid spurious IRQs</text>
+
+  <!-- Legend -->
+  <rect x="230" y="328" width="340" height="28" rx="4" fill="#161b22" stroke="var(--border)" stroke-width=".5"/>
+  <text x="242" y="346" font-size="7" fill="var(--text2)">Key: <line x1="282" y1="343" x2="310" y2="343" stroke="#d29922" stroke-width="2"/> Input &nbsp; <line x1="355" y1="343" x2="380" y2="343" stroke="#3fb950" stroke-width="2"/> Output &nbsp; <line x1="425" y1="343" x2="450" y2="343" stroke="#f85149" stroke-width="2"/> IRQ &nbsp; <line x1="485" y1="343" x2="510" y2="343" stroke="#bc8cff" stroke-width="2"/> UART</text>
+
+  <!-- Input blocks -->
+  <rect x="28" y="68" width="155" height="30" rx="4" fill="#1a2332" stroke="#d29922" stroke-width="1" class="block" data-comp="inc"/>
+  <text x="105" y="84" text-anchor="middle" font-size="9" fill="#d29922">PA0 — UP</text>
+  <rect x="28" y="105" width="155" height="30" rx="4" fill="#1a2332" stroke="#d29922" stroke-width="1" class="block" data-comp="dec"/>
+  <text x="105" y="121" text-anchor="middle" font-size="9" fill="#d29922">PA1 — DOWN</text>
+  <rect x="28" y="142" width="155" height="30" rx="4" fill="#1a2332" stroke="#d29922" stroke-width="1" class="block" data-comp="right"/>
+  <text x="105" y="158" text-anchor="middle" font-size="9" fill="#d29922">PA2 — RIGHT</text>
+  <rect x="28" y="179" width="155" height="30" rx="4" fill="#1a2332" stroke="#d29922" stroke-width="1" class="block" data-comp="left"/>
+  <text x="105" y="195" text-anchor="middle" font-size="9" fill="#d29922">PA3 — LEFT</text>
+  <rect x="28" y="218" width="155" height="30" rx="4" fill="#2a0a0a" stroke="#f85149" stroke-width="1" class="block" data-comp="int0"/>
+  <text x="105" y="234" text-anchor="middle" font-size="9" fill="#f85149">PD2 INT0 — MODE</text>
+  <rect x="28" y="255" width="155" height="30" rx="4" fill="#2a0a0a" stroke="#f85149" stroke-width="1" class="block" data-comp="int1"/>
+  <text x="105" y="271" text-anchor="middle" font-size="9" fill="#f85149">PD3 INT1 — EDIT</text>
+
+  <!-- Output blocks -->
+  <rect x="610" y="70" width="180" height="44" rx="4" fill="#0a1f14" stroke="#3fb950" stroke-width="1" class="block" data-comp="display"/>
+  <text x="700" y="87" text-anchor="middle" font-size="9" fill="#3fb950" font-weight="500">7SEG-MPX6-CA Display</text>
+  <text x="700" y="100" text-anchor="middle" font-size="7" fill="var(--text2)">6-digit common-anode</text>
+  <rect x="610" y="120" width="180" height="32" rx="4" fill="#0a1f14" stroke="#3fb950" stroke-width="1" class="block" data-comp="segb"/>
+  <text x="700" y="138" text-anchor="middle" font-size="9" fill="#3fb950">PORTB + 220&Omega; &rarr; Segments</text>
+  <rect x="610" y="158" width="180" height="32" rx="4" fill="#0a1f14" stroke="#3fb950" stroke-width="1" class="block" data-comp="digc"/>
+  <text x="700" y="176" text-anchor="middle" font-size="9" fill="#3fb950">PORTC0-5 &rarr; Digit En</text>
+  <rect x="610" y="196" width="180" height="32" rx="4" fill="#1a2332" stroke="#d29922" stroke-width="1" class="block" data-comp="led"/>
+  <text x="700" y="214" text-anchor="middle" font-size="9" fill="#d29922">PD4 &rarr; Heartbeat LED</text>
+  <rect x="610" y="240" width="180" height="70" rx="6" fill="#1a0a2e" stroke="#bc8cff" stroke-width="1.5" class="block" data-comp="sensor"/>
+  <text x="700" y="258" text-anchor="middle" font-size="9" fill="#bc8cff" font-weight="500">Remote Sensor Board</text>
+  <text x="700" y="272" text-anchor="middle" font-size="7" fill="var(--text2)">UART slave @ 9600</text>
+  <text x="700" y="285" text-anchor="middle" font-size="7" fill="var(--text2)">Replies: C / F / H</text>
+
+  <!-- Arrows -->
+  <line x1="183" y1="83" x2="228" y2="118" class="a-arrow" stroke="#d29922" stroke-width="1.5" marker-end="url(#ao)"/>
+  <line x1="183" y1="120" x2="228" y2="135" class="a-arrow" stroke="#d29922" stroke-width="1.5" marker-end="url(#ao)"/>
+  <line x1="183" y1="157" x2="228" y2="145" class="a-arrow" stroke="#d29922" stroke-width="1.5" marker-end="url(#ao)"/>
+  <line x1="183" y1="194" x2="228" y2="155" class="a-arrow" stroke="#d29922" stroke-width="1.5" marker-end="url(#ao)"/>
+  <line x1="183" y1="233" x2="228" y2="195" class="a-arrow" stroke="#f85149" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#ap)"/>
+  <line x1="183" y1="270" x2="228" y2="225" class="a-arrow" stroke="#f85149" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#ap)"/>
+  <line x1="570" y1="136" x2="608" y2="136" class="a-arrow" stroke="#3fb950" stroke-width="1.5" marker-end="url(#ag)"/>
+  <line x1="570" y1="173" x2="608" y2="173" class="a-arrow" stroke="#3fb950" stroke-width="1.5" marker-end="url(#ag)"/>
+  <line x1="570" y1="213" x2="608" y2="213" class="a-arrow" stroke="#d29922" stroke-width="1.5" marker-end="url(#ao)"/>
+  <!-- UART arrows -->
+  <line x1="555" y1="255" x2="575" y2="255" stroke="#bc8cff" stroke-width="1.5"/>
+  <polygon points="585,255 572,249 572,261" fill="#bc8cff"/>
+  <line x1="575" y1="275" x2="555" y2="275" stroke="#bc8cff" stroke-width="1.5"/>
+  <polygon points="555,275 568,269 568,281" fill="#bc8cff"/>
+  <text x="565" y="251" text-anchor="middle" font-size="6" fill="#bc8cff">TX</text>
+  <text x="565" y="287" text-anchor="middle" font-size="6" fill="#bc8cff">RX</text>
+</svg>
+</div>
+<div class="info-panel" id="compInfo">
+  <div style="color:var(--text2)">Click any component to see details, pins, firmware, and data flow.</div>
+</div>
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- S2: FIRMWARE -->
+<!-- ============================================================ -->
+<div id="s2" class="section">
+<h2>Firmware Architecture — Software Layers</h2>
+<div class="cols2">
+<div>
+  <h3>Application Layer</h3>
+  <div class="fw-layer fw-app" data-fw="disp-mgr"><div>Display Manager</div><div class="fn">update_display() show_time() show_temperature() draw_env_value()</div></div>
+  <div class="fw-layer fw-app" data-fw="sensor-mgr"><div>Sensor Manager</div><div class="fn">poll_temperature() uart_send()</div></div>
+  <div class="fw-layer fw-app" data-fw="state-mgr"><div>State Machine</div><div class="fn">mode cycling clock_edit cursor control</div></div>
+  <h3>HAL Layer</h3>
+  <div class="fw-layer fw-hal" data-fw="uart-drv"><div>UART Driver</div><div class="fn">uart_init() uart_send() usart_rx_isr()</div></div>
+  <div class="fw-layer fw-hal" data-fw="timer-drv"><div>Timer Driver</div><div class="fn">timer1_compa_isr() timer2_comp_isr()</div></div>
+  <div class="fw-layer fw-hal" data-fw="gpio-drv"><div>GPIO Driver</div><div class="fn">DDRA/B/C/D PORT pull-ups initial state</div></div>
+  <h3>Hardware</h3>
+  <div class="fw-layer fw-hw" data-fw="hw"><div>ATmega32 @ 8 MHz</div><div class="fn">7SEG-MPX6-CA Keypad Buttons Sensor Board</div></div>
+</div>
+<div>
+  <div class="info-panel" id="fwInfo" style="min-height:120px"><div style="color:var(--text2)">Click a module to inspect.</div></div>
+  <h3>Data Flow</h3>
+  <div class="info-panel" id="fwFlow" style="min-height:80px;font-size:10px"><div style="color:var(--text2)">Select a module above.</div></div>
+</div>
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- S3: WORKFLOW -->
+<!-- ============================================================ -->
+<div id="s3" class="section">
+<h2>Runtime Workflow — Animated State Machine</h2>
+<div class="ctrl-bar">
+  <button id="wfPlay">&#9654; Play</button>
+  <button id="wfPause">&#9646;&#9646; Pause</button>
+  <button id="wfReset">&#8634; Reset</button>
+  <span style="font-size:9px;color:var(--text2)">Step:</span><span id="wfStepLabel" style="font-size:9px;color:var(--blue)">0/10</span>
+  <button id="wfStep">Step &rarr;</button>
+</div>
+<div class="cols2">
+<div id="wfContainer"></div>
+<div>
+  <div class="info-panel" id="wfInfo"><div style="color:var(--text2)">Click Play or Step to walk through the system boot and runtime flow.</div></div>
+  <h3>Execution Trace</h3>
+  <div class="info-panel" id="wfTrace" style="min-height:60px;font-size:10px"><div style="color:var(--text2)">Ready.</div></div>
+</div>
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- S4: DISPLAY + DEBUG -->
+<!-- ============================================================ -->
+<div id="s4" class="section">
+<h2>7-Segment Multiplexing &amp; Debug Panel</h2>
+<div class="cols2-1">
+<div>
+  <div class="display-container" id="displayContainer">
+    <div style="font-size:9px;color:var(--text2);margin-bottom:6px">
+      <span class="status-dot green" id="dispLiveDot"></span>
+      Live AVR Multiplexed Display
+      <span style="float:right;font-size:8px;color:var(--text2)" id="dispTimerInfo">Timer2 CTC /64 OCR2=0xF9</span>
+    </div>
+    <div class="digits" id="displayDigits"></div>
+    <div class="display-info">
+      <span id="dispActive">Digit: 0</span>
+      <span id="dispFreq">83 Hz frame</span>
+      <span id="dispT2Isr">0 ISRs</span>
+    </div>
+    <div id="dispModeLabel" style="margin-top:4px;font-size:9px;color:var(--cyan);text-align:center"></div>
+  </div>
+  <h3>Control Panel</h3>
+  <div class="ctrl-bar">
+    <button id="btnModeCycle">&#8635; Cycle Mode</button>
+    <button id="btnEditToggle">&#9998; Toggle Edit</button>
+    <button id="btnInc">+ UP</button>
+    <button id="btnDec">- DOWN</button>
+    <button id="btnRight">&rarr; RIGHT</button>
+    <button id="btnLeft">&larr; LEFT</button>
+  </div>
+</div>
+<div>
+  <h3>AVR Timing Debug</h3>
+  <div id="debugPanel">
+    <div class="row">
+      <div class="col">
+        <div><span class="label">F_CPU</span><span class="value">8.000 MHz</span></div>
+        <div><span class="label">CPU cycles</span><span class="value" id="dbgCycles">0</span></div>
+        <div><span class="label">Sim time</span><span class="value" id="dbgSimTime">0.000 s</span></div>
+        <hr class="divider">
+        <div><span class="label">Timer2 clock</span><span class="value">125.000 kHz</span></div>
+        <div><span class="label">TCNT2</span><span class="value" id="dbgTcnt2">0</span></div>
+        <div><span class="label">OCR2</span><span class="value orange">249 (0xF9)</span></div>
+        <div><span class="label">T2 prescaler</span><span class="value">/64 (CS22)</span></div>
+      </div>
+      <div class="col">
+        <div><span class="label">T2 ISR count</span><span class="value" id="dbgIsrCount">0</span></div>
+        <div><span class="label">T2 ISR rate</span><span class="value" id="dbgIsrRate">0 Hz</span></div>
+        <div><span class="label">ISR period</span><span class="value">2.000 ms</span></div>
+        <hr class="divider">
+        <div><span class="label">Current digit</span><span class="value" id="dbgDigit">0</span></div>
+        <div><span class="label">Heartbeat cnt</span><span class="value" id="dbgHeartbeat">0</span></div>
+        <div><span class="label">Refresh cnt</span><span class="value" id="dbgRefresh">0/500</span></div>
+        <div><span class="label">Blink tick</span><span class="value" id="dbgBlinkTick">0</span></div>
+      </div>
+    </div>
+    <hr class="divider">
+    <div class="row">
+      <div class="col">
+        <div><span class="label">Clock</span><span class="value green" id="dbgClock">12:34:56</span></div>
+        <div><span class="label">Mode</span><span class="value" id="dbgMode">TIME</span></div>
+      </div>
+      <div class="col">
+        <div><span class="label">Edit</span><span class="value" id="dbgEdit">OFF</span></div>
+        <div><span class="label">Heartbeat LED</span><span class="value" id="dbgLed">ON</span></div>
+      </div>
+    </div>
+  </div>
+  <h3>Multiplexing Timing</h3>
+  <div class="info-panel" style="font-size:9px">
+    <table>
+      <tr><th>Parameter</th><th>Value</th></tr>
+      <tr><td>Timer2 mode</td><td>CTC (Clear Timer on Compare Match)</td></tr>
+      <tr><td>T2 clock</td><td>8 MHz / 64 = 125 kHz</td></tr>
+      <tr><td>OCR2 value</td><td>249 = 0xF9</td></tr>
+      <tr><td>Counts per ISR</td><td>OCR2 + 1 = 250</td></tr>
+      <tr><td>ISR period</td><td>250 / 125 kHz = 2.000 ms</td></tr>
+      <tr><td>ISR frequency</td><td>125 kHz / 250 = 500.0 Hz</td></tr>
+      <tr><td>Digit ON time</td><td>2 ms</td></tr>
+      <tr><td>Frame (6 digits)</td><td>12 ms</td></tr>
+      <tr><td>Refresh rate</td><td>1 / 12 ms = 83.3 Hz</td></tr>
+      <tr><td>Heartbeat interval</td><td>500 ISRs × 2 ms = 1.000 s</td></tr>
+      <tr><td>Blink rate</td><td>tick&gt;&gt;6 changes every 64 ISRs = 128 ms</td></tr>
+    </table>
+  </div>
+</div>
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- S5: UART -->
+<!-- ============================================================ -->
+<div id="s5" class="section">
+<h2>UART Communication Protocol</h2>
+<div class="ctrl-bar">
+  <button id="uartSendC">Send 'C' (Celsius)</button>
+  <button id="uartSendF">Send 'F' (Fahrenheit)</button>
+  <button id="uartSendH">Send 'H' (Humidity)</button>
+  <span style="margin-left:8px;font-size:9px;color:var(--text2)">Auto:</span>
+  <button id="uartAuto" class="active">ON</button>
+</div>
+<div class="cols2">
+<div>
+  <h3>Transaction Timeline</h3>
+  <div class="uart-vis" id="uartTimeline" style="min-height:160px"><div style="text-align:center;color:var(--text2);font-size:9px;padding:20px">Waiting for UART transaction...</div></div>
+</div>
+<div>
+  <h3>Frame View @ 9600 baud</h3>
+  <div class="uart-vis">
+    <div style="font-size:9px;color:var(--text2);margin-bottom:4px">TX 10-bit frame (1 start + 8 data + 1 stop):</div>
+    <div class="uart-frame" id="uartTXFrame">
+      <div class="uart-bit start">ST</div><div class="uart-bit data" style="background:#0d1117">0</div><div class="uart-bit data" style="background:#0d1117">0</div><div class="uart-bit data" style="background:#0d1117">0</div><div class="uart-bit data" style="background:#0d1117">0</div><div class="uart-bit data" style="background:#0d1117">0</div><div class="uart-bit data" style="background:#0d1117">0</div><div class="uart-bit data" style="background:#0d1117">0</div><div class="uart-bit data" style="background:#0d1117">0</div><div class="uart-bit stop">SP</div>
+    </div>
+    <div style="font-size:9px;color:var(--text2);margin:8px 0 4px">RX 10-bit frame:</div>
+    <div class="uart-frame" id="uartRXFrame">
+      <div class="uart-bit start">ST</div><div class="uart-bit data" style="background:#0d1117">0</div><div class="uart-bit data" style="background:#0d1117">0</div><div class="uart-bit data" style="background:#0d1117">0</div><div class="uart-bit data" style="background:#0d1117">0</div><div class="uart-bit data" style="background:#0d1117">0</div><div class="uart-bit data" style="background:#0d1117">0</div><div class="uart-bit data" style="background:#0d1117">0</div><div class="uart-bit data" style="background:#0d1117">0</div><div class="uart-bit stop">SP</div>
+    </div>
+  </div>
+  <div class="info-panel" style="font-size:9px">
+    <table>
+      <tr><th>Param</th><th>Value</th></tr>
+      <tr><td>Baud</td><td>9600</td></tr>
+      <tr><td>UBRR</td><td>51 (0x33)</td></tr>
+      <tr><td>Bit time</td><td>104.17 &mu;s</td></tr>
+      <tr><td>Frame</td><td>1.042 ms</td></tr>
+      <tr><td>RX handler</td><td>USART_RXC ISR</td></tr>
+      <tr><td>Store</td><td>current_temp = (signed char)UDR</td></tr>
+    </table>
+  </div>
+</div>
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- S6: REGISTERS -->
+<!-- ============================================================ -->
+<div id="s6" class="section">
+<h2>MCU Registers — Low-Level Memory View</h2>
+<div class="cols2">
+<div class="reg-grid" id="regGrid"></div>
+<div class="info-panel" id="regDetail" style="min-height:180px"><div style="color:var(--text2)">Click a register to inspect.</div></div>
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- S7: SIGNAL FLOW -->
+<!-- ============================================================ -->
+<div id="s7" class="section">
+<h2>Hardware Signal Flow — Animated Data Path</h2>
+<div class="ctrl-bar">
+  <button id="sfStart">&#9654; Start</button>
+  <button id="sfStop">&#9646;&#9646; Stop</button>
+  <span style="font-size:9px;color:var(--text2);margin-left:6px" id="sfStatus">Click Start</span>
+</div>
+<div class="signal-flow" id="signalFlow">
+  <div class="signal-node" style="left:5%">Sensor</div>
+  <div class="signal-node" style="left:24%">Conditioning</div>
+  <div class="signal-node" style="left:44%">MCU RX</div>
+  <div class="signal-node" style="left:62%">ISR</div>
+  <div class="signal-node" style="left:80%">Display</div>
+</div>
+<div class="info-panel" id="sfDetail" style="margin-top:8px"><div style="color:var(--text2)">Click Start to animate the signal path.</div></div>
+</div>
+
+<!-- ============================================================ -->
+<!-- S8: TIMELINE -->
+<!-- ============================================================ -->
+<div id="s8" class="section">
+<h2>Execution Trace</h2>
+<div class="ctrl-bar">
+  <button id="tlStart">&#9654; Start</button>
+  <button id="tlStop">&#9646;&#9646; Stop</button>
+  <button id="tlClear">&#8634; Clear</button>
+  <span style="font-size:9px;color:var(--text2)">Entries: <span id="tlCount">0</span></span>
+</div>
+<div class="timeline" id="timeline"></div>
+</div>
+
+</div><!-- /content -->
+
+<script>
+// ================================================================
+// VIRTUAL AVR CLOCK ENGINE
+// ================================================================
+const F_CPU        = 8000000;               // 8 MHz
+const T2_PRESCALER = 64;
+const T2_CLOCK     = F_CPU / T2_PRESCALER;  // 125000 Hz
+const T2_TICK_US   = 1000000 / T2_CLOCK;    // 8.0 µs per Timer2 tick
+const OCR2         = 249;
+const T2_TOP       = OCR2 + 1;              // 250 counts per ISR
+const T2_ISR_PERIOD_US = T2_TICK_US * T2_TOP; // 2000 µs = 2.0 ms
+const T2_ISR_FREQ  = 1000000 / T2_ISR_PERIOD_US; // 500.0 Hz
+
+// Timer1 (16-bit, prescaler /256, OCR1A=31249 -> 1 Hz)
+// Used for the actual timekeeping
+const T1_PRESCALER = 256;
+const T1_CLOCK     = F_CPU / T1_PRESCALER;  // 31250 Hz
+const OCR1A        = 31249;
+const T1_TOP       = OCR1A + 1;             // 31250
+const T1_ISR_PERIOD_US = (1000000 / T1_CLOCK) * T1_TOP; // 1000000 µs = 1.0 s
+
+// ================================================================
+// SYSTEM STATE
+// ================================================================
+const sim = {
+  // Timing
+  cycles: 0,
+  simTimeUs: 0,
+  speed: 1,
+  running: true,
+
+  // Timer2
+  t2Tcnt: 0,
+  t2IsrCount: 0,
+  t2Accum: 0,       // accumulated µs toward next T2 tick
+
+  // Timer1
+  t1Tcnt: 0,
+  t1IsrCount: 0,
+  t1Accum: 0,       // accumulated µs toward next T1 tick
+
+  // Display
+  current_digit: 0,
+  display_buf: [1,2,3,4,5,0],
+  blink: [0,0,0,0,0,0],
+  tick: 0,          // incremented every T2 ISR
+
+  // Clock
+  hours: 12, minutes: 34, seconds: 0,
+
+  // Heartbeat
+  heartbeat_tick: 0,
+  heartbeat: 1,
+
+  // Mode
+  mode: 0, // TIME=0 TEMP=1 FAHR=2 HUM=3
+  clock_edit: 0,
+  cursor: 0,
+  colon_on: 0,
+
+  // Sensor
+  current_temp: 22,
+  temp_request: 0,
+
+  // Performance tracking
+  lastFrameTime: 0,
+  frameCount: 0,
+  lastIsrRateUpdate: 0,
+  isrRateCount: 0,
+  currentIsrRate: 0,
+  lastSecondIsrCount: 0,
+};
+
+const MODE_NAMES = ['TIME','TEMP','FAHR','HUM'];
+const SEG_CODE = [0xC0,0xF9,0xA4,0xB0,0x99,0x92,0x82,0xF8,0x80,0x90,0xFF,0xBF,0xC6,0x8E,0x8A];
+
+// ================================================================
+// TIMER2 ISR — matches real firmware behavior
+// ================================================================
+function timer2_comp_isr() {
+  // 1. scan_edit_keys() — simplified, real logic in apply_keys below
+  // 2. PORTC = 0x00 — all digits off (anti-ghosting)
+  // 3. Check blink
+  let show = 1;
+  if (sim.blink[sim.current_digit] && ((sim.tick >> 6) & 1))
+    show = 0;
+  sim.tick++;
+
+  // 4. Output segment pattern (PORTB = seg_code[...]) — stored for rendering
+  // 5. Colon: if MODE_TIME and digit 2 or 4 and seconds odd → DP ON
+  //    DP is active-low on common-anode, so PORTB &= 0x7F
+  sim.colon_on = (sim.mode === 0) && (sim.current_digit === 2 || sim.current_digit === 4) && (sim.seconds & 1);
+
+  // 6. PORTC = (1 << current_digit) — enable digit
+  // 7. Advance digit
+  sim.current_digit = (sim.current_digit + 1) % 6;
+
+  // 8. Heartbeat: every 500 ISRs = 1 second
+  sim.heartbeat_tick++;
+  if (sim.heartbeat_tick >= 500) {
+    sim.heartbeat_tick = 0;
+    sim.heartbeat ^= 1;
+  }
+
+  sim.t2IsrCount++;
+}
+
+// ================================================================
+// TIMER1 COMPA ISR — 1-second timekeeping
+// ================================================================
+function timer1_compa_isr() {
+  sim.seconds++;
+  if (sim.seconds >= 60) {
+    sim.seconds = 0;
+    sim.temp_request = 1;
+    sim.minutes++;
+    if (sim.minutes >= 60) {
+      sim.minutes = 0;
+      sim.hours++;
+      if (sim.hours >= 24) sim.hours = 0;
+    }
+  }
+  sim.t1IsrCount++;
+}
+
+// ================================================================
+// SIMULATION ENGINE
+// ================================================================
+function simTick(deltaMs) {
+  if (!sim.running) return;
+
+  // Convert wall-clock delta to simulated microseconds
+  const deltaUs = deltaMs * 1000 * sim.speed;
+  sim.simTimeUs += deltaUs;
+  sim.cycles = Math.round(sim.simTimeUs * (F_CPU / 1000000));
+
+  // === TIMER2: 125 kHz clock ===
+  // Accumulate time toward next Timer2 tick (each tick = 8 µs)
+  sim.t2Accum += deltaUs;
+  while (sim.t2Accum >= T2_TICK_US) {
+    sim.t2Accum -= T2_TICK_US;
+
+    // Timer2 counter increments
+    sim.t2Tcnt++;
+    if (sim.t2Tcnt > OCR2) {
+      sim.t2Tcnt = 0;
+      timer2_comp_isr();           // compare match → ISR fires
+    }
+  }
+
+  // === TIMER1: 31250 Hz clock (prescaler /256) ===
+  sim.t1Accum += deltaUs;
+  const T1_TICK_US = 1000000 / T1_CLOCK; // 32 µs per Timer1 tick
+  while (sim.t1Accum >= T1_TICK_US) {
+    sim.t1Accum -= T1_TICK_US;
+    sim.t1Tcnt++;
+    if (sim.t1Tcnt > OCR1A) {
+      sim.t1Tcnt = 0;
+      timer1_compa_isr();          // 1-second interrupt
+    }
+  }
+
+  // Update ISR rate tracking
+  sim.frameCount++;
+  if (sim.simTimeUs - sim.lastIsrRateUpdate >= 1000000) {
+    sim.currentIsrRate = sim.t2IsrCount - sim.lastSecondIsrCount;
+    sim.lastSecondIsrCount = sim.t2IsrCount;
+    sim.lastIsrRateUpdate = sim.simTimeUs;
+  }
+}
+
+// ================================================================
+// DISPLAY BUFFER UPDATE (called from render, not ISR)
+// ================================================================
+function updateDisplayBuf() {
+  const buf = sim.display_buf;
+  const mode = sim.mode;
+  const ct = sim.current_temp;
+
+  if (mode === 0) {
+    // TIME mode
+    buf[0] = Math.floor(sim.hours / 10);
+    buf[1] = sim.hours % 10;
+    buf[2] = Math.floor(sim.minutes / 10);
+    buf[3] = sim.minutes % 10;
+    buf[4] = Math.floor(sim.seconds / 10);
+    buf[5] = sim.seconds % 10;
+
+    // Blink for edit mode
+    for (let i = 0; i < 6; i++) sim.blink[i] = 0;
+    if (sim.clock_edit) {
+      if (sim.cursor === 0) { sim.blink[0] = 1; sim.blink[1] = 1; }
+      else if (sim.cursor === 1) { sim.blink[2] = 1; sim.blink[3] = 1; }
+      else { sim.blink[4] = 1; sim.blink[5] = 1; }
+    }
+  } else {
+    // TEMP / FAHR / HUM mode
+    for (let i = 0; i < 6; i++) buf[i] = 10; // blank
+    let val = ct;
+    const unit = mode === 1 ? 12 : (mode === 2 ? 13 : 14); // C/F/H glyph index
+    if (val < 0) { buf[0] = 11; val = -val; }
+    else buf[0] = val >= 100 ? Math.floor(val / 100) : 10;
+    if (val >= 100) { buf[1] = Math.floor(val / 10) % 10; buf[2] = val % 10; }
+    else if (val >= 10) { buf[1] = Math.floor(val / 10); buf[2] = val % 10; }
+    else { buf[1] = 10; buf[2] = val; }
+    buf[3] = 10; buf[4] = 10; buf[5] = unit;
+    for (let i = 0; i < 6; i++) sim.blink[i] = 0;
+  }
+  sim.colon_on = (sim.mode === 0) && (sim.current_digit === 2 || sim.current_digit === 4) && (sim.seconds & 1);
+}
+
+// ================================================================
+// 7-SEGMENT RENDERING
+// ================================================================
+function createSevenSegment() {
+  const c = document.getElementById('displayDigits');
+  c.innerHTML = '';
+  // Build digit 0-5 with colon separators after digit 1 and 3
+  const colonPositions = [2, 5]; // after digits 1 and 3 (0-indexed)
+  for (let i = 0; i < 6; i++) {
+    if (i === 2 || i === 4) {
+      const sep = document.createElement('div');
+      sep.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:10px';
+      for (let j = 0; j < 2; j++) {
+        const dot = document.createElement('div');
+        dot.className = 'colon-dot';
+        dot.id = 'colon' + ((i===2?j:j+2));
+        sep.appendChild(dot);
+      }
+      c.appendChild(sep);
+    }
+    const w = document.createElement('div');
+    w.className = 'digit-wrap';
+    w.id = 'digit' + i;
+    w.innerHTML = `<svg viewBox="0 0 38 62">
+      <rect x="5" y="2" width="28" height="5" rx="2" fill="#2a0808"/>
+      <rect x="33" y="7" width="5" height="20" rx="2" fill="#2a0808"/>
+      <rect x="33" y="35" width="5" height="20" rx="2" fill="#2a0808"/>
+      <rect x="5" y="55" width="28" height="5" rx="2" fill="#2a0808"/>
+      <rect x="0" y="35" width="5" height="20" rx="2" fill="#2a0808"/>
+      <rect x="0" y="7" width="5" height="20" rx="2" fill="#2a0808"/>
+      <rect x="5" y="28" width="28" height="5" rx="2" fill="#2a0808"/>
+      <circle cx="34" cy="57" r="2.5" fill="#2a0808"/></svg>`;
+    c.appendChild(w);
+  }
+}
+createSevenSegment();
+
+// Segment mapping: a=0, b=1, c=2, d=3, e=4, f=5, g=6, dp=7
+const SEG_POSITIONS = [
+  { name: 'a', x: 5, y: 2, w: 28, h: 5 },
+  { name: 'b', x: 33, y: 7, w: 5, h: 20 },
+  { name: 'c', x: 33, y: 35, w: 5, h: 20 },
+  { name: 'd', x: 5, y: 55, w: 28, h: 5 },
+  { name: 'e', x: 0, y: 35, w: 5, h: 20 },
+  { name: 'f', x: 0, y: 7, w: 5, h: 20 },
+  { name: 'g', x: 5, y: 28, w: 28, h: 5 },
+  { name: 'dp', x: 34, y: 57, w: 2.5, r: true },
+];
+
+function renderSegments() {
+  updateDisplayBuf();
+  const buf = sim.display_buf;
+  const blink = sim.blink;
+  const curDigit = sim.current_digit;
+  const tick = sim.tick;
+
+  for (let i = 0; i < 6; i++) {
+    const wrap = document.getElementById('digit' + i);
+    if (!wrap) continue;
+    const idx = buf[i];
+    const code = (idx >= 0 && idx < SEG_CODE.length) ? SEG_CODE[idx] : 0xFF;
+    const blanked = blink[i] && ((tick >> 6) & 1);
+    const actualCode = blanked ? 0xFF : code;
+    wrap.className = 'digit-wrap' + (i === curDigit ? ' active' : '');
+
+    const svg = wrap.querySelector('svg');
+    // a-g segments: active-low (bit=0 → ON for common-anode)
+    for (let s = 0; s < 7; s++) {
+      const rect = svg.children[s];
+      const on = !((actualCode >> s) & 1);
+      rect.setAttribute('fill', on ? '#ff3333' : '#2a0808');
+    }
+    // DP: bit 7
+    const dp = svg.querySelector('circle');
+    // DP is also active-low, but colon handling overrides
+    let dpOn = !((actualCode >> 7) & 1);
+    // Colon override for MODE_TIME
+    if (sim.mode === 0 && (i === 1 || i === 3) && (sim.seconds & 1) && !blanked) {
+      dpOn = true;
+    }
+    dp.setAttribute('fill', dpOn ? '#ff3333' : '#2a0808');
+  }
+
+  // Colon dots
+  const colonState = (sim.mode === 0) && (sim.seconds & 1);
+  for (let j = 0; j < 4; j++) {
+    const el = document.getElementById('colon' + j);
+    if (el) el.style.background = colonState ? '#ff3333' : '#2a0808';
+  }
+}
+
+// ================================================================
+// UI UPDATES
+// ================================================================
+function updateUI() {
+  // Status bar
+  document.getElementById('simSpeedLabel').textContent = sim.speed.toFixed(2) + 'x';
+  document.getElementById('simTimeDisplay').textContent =
+    String(sim.hours).padStart(2,'0') + ':' +
+    String(sim.minutes).padStart(2,'0') + ':' +
+    String(sim.seconds).padStart(2,'0');
+  document.getElementById('simT2Count').textContent = sim.t2IsrCount;
+  document.getElementById('simT2Rate').textContent = Math.round(sim.currentIsrRate);
+  document.getElementById('simDot').style.background = sim.running ? 'var(--green)' : 'var(--red)';
+  document.getElementById('simStatus').textContent = sim.running ? 'Running' : 'Paused';
+
+  // Debug panel
+  document.getElementById('dbgCycles').textContent = sim.cycles.toLocaleString();
+  document.getElementById('dbgSimTime').textContent = (sim.simTimeUs / 1000000).toFixed(3) + ' s';
+  document.getElementById('dbgTcnt2').textContent = sim.t2Tcnt;
+  document.getElementById('dbgIsrCount').textContent = sim.t2IsrCount;
+  document.getElementById('dbgIsrRate').textContent = Math.round(sim.currentIsrRate) + ' Hz';
+  document.getElementById('dbgDigit').textContent = sim.current_digit;
+  document.getElementById('dbgHeartbeat').textContent = sim.heartbeat_tick;
+  document.getElementById('dbgRefresh').textContent = sim.heartbeat_tick + '/500';
+  document.getElementById('dbgBlinkTick').textContent = sim.tick;
+  document.getElementById('dbgClock').textContent =
+    String(sim.hours).padStart(2,'0') + ':' +
+    String(sim.minutes).padStart(2,'0') + ':' +
+    String(sim.seconds).padStart(2,'0');
+  document.getElementById('dbgMode').textContent = MODE_NAMES[sim.mode];
+  document.getElementById('dbgEdit').textContent = sim.clock_edit ? 'ON' : 'OFF';
+  document.getElementById('dbgLed').textContent = sim.heartbeat ? 'ON' : 'OFF';
+
+  // Display info
+  document.getElementById('dispActive').textContent = 'Digit: ' + sim.current_digit;
+  document.getElementById('dispFreq').textContent = Math.round(T2_ISR_FREQ / 6) + ' Hz frame';
+  document.getElementById('dispT2Isr').textContent = sim.t2IsrCount + ' ISRs';
+  document.getElementById('dispModeLabel').textContent =
+    'Mode: ' + MODE_NAMES[sim.mode] +
+    (sim.clock_edit ? ' | EDIT cursor=' + sim.cursor : '');
+
+  // Render segments (at display refresh rate, not ISR rate)
+  renderSegments();
+}
+
+// ================================================================
+// MAIN RENDER LOOP (requestAnimationFrame)
+// ================================================================
+let rafId = null;
+
+function simLoop(timestamp) {
+  if (!sim.lastFrameTime) sim.lastFrameTime = timestamp;
+  const delta = Math.min(timestamp - sim.lastFrameTime, 100); // cap at 100ms
+  sim.lastFrameTime = timestamp;
+
+  if (delta > 0 && sim.running) {
+    simTick(delta);
+  }
+
+  // Render at display frame rate (83 Hz = every ~12ms)
+  // But we render every animation frame (~60fps) for smooth UI updates
+  updateUI();
+
+  rafId = requestAnimationFrame(simLoop);
+}
+
+// ================================================================
+// SPEED CONTROL
+// ================================================================
+document.querySelectorAll('#speedGroup button').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('#speedGroup button').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    sim.speed = parseFloat(this.dataset.speed);
+  });
+});
+
+// ================================================================
+// SECTION NAVIGATION
+// ================================================================
+document.querySelectorAll('#nav a').forEach(el => {
+  el.addEventListener('click', function(e) {
+    e.preventDefault();
+    const sec = this.dataset.section;
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.getElementById(sec).classList.add('active');
+    document.querySelectorAll('#nav a').forEach(a => a.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+
+// ================================================================
+// SECTION 1: Block Diagram click
+// ================================================================
+const compData = {
+  mcu: { desc:'ATmega32 Microcontroller', pins:'32-pin DIP · 8 MHz XTAL · VCC=5V', fw:'main.c — entire firmware', flow:'All I/O converges here. CPU executes main loop + ISRs.' },
+  cpu: { desc:'AVR CPU Core — 8-bit RISC', pins:'Internal bus · 32 registers', fw:'Executes all code', flow:'Fetches from flash. Most instructions single-cycle at 8 MHz.' },
+  timer1: { desc:'Timer1 — 16-bit CTC', pins:'—', fw:'timer1_compa_isr() main.c:171', flow:'Prescaler /256, OCR1A=31249 → 1 Hz interrupt for timekeeping.' },
+  timer2: { desc:'Timer2 — 8-bit CTC', pins:'—', fw:'timer2_comp_isr() main.c:192', flow:'Prescaler /64, OCR2=249 → 2 ms interrupt. Drives: display mux, key scan, heartbeat, blink.' },
+  usart: { desc:'USART 9600 8N1', pins:'PD0(TX) PD1(RX)', fw:'uart_init() uart_send() usart_rx_isr() main.c:232', flow:'TX polled (UDRE), RX interrupt-driven. UBRR=51 (0x33).' },
+  int: { desc:'INT0 / INT1 Ext IRQ', pins:'PD2(INT0) PD3(INT1)', fw:'ext_int0_isr() ext_int1_isr() main.c:158', flow:'Falling-edge triggered. INT0 cycles mode, INT1 toggles edit.' },
+  porta: { desc:'PORTA — Keypad input', pins:'PA0(UP) PA1(DOWN) PA2(RIGHT) PA3(LEFT)', fw:'DDRA=0x00 PORTA pull-ups main.c:266', flow:'Active-low, sampled at 2ms in Timer2 ISR.' },
+  portb: { desc:'PORTB — Segment data', pins:'PB0-7 → a-dp + DP via 220Ω', fw:'DDRB=0xFF PORTB=seg_code[...] main.c:272', flow:'Active-low segment output. Updated every 2ms in Timer2 ISR.' },
+  portc: { desc:'PORTC — Digit enable', pins:'PC0-5 → DIG1-6 transistors', fw:'DDRC=0x3F PORTC=(1<<digit) main.c:278', flow:'Active-high, one-hot. Only one digit per 2ms slot.' },
+  portd: { desc:'PORTD — UART+LED+INT', pins:'PD0(TX) PD1(RX) PD2(INT0) PD3(INT1) PD4(LED)', fw:'DDRD config main.c:284', flow:'UART communication, ext IRQ inputs, heartbeat LED output.' },
+  display: { desc:'7SEG-MPX6-CA Display', pins:'6 common-anode + 8 segment lines', fw:'seg_code[] display_buf[6] main.c:16', flow:'Common-anode multiplexed. 2ms/digit, 12ms frame, 83 Hz refresh.' },
+  segb: { desc:'Segment resistors 220Ω', pins:'PORTB → resistors → segments', fw:'Active-low drive main.c:206', flow:'Current limiting resistors on each segment line.' },
+  digc: { desc:'Digit transistors', pins:'PORTC → NPN transistors → DIG1-6', fw:'One-hot enable main.c:216', flow:'Active-high through transistors to common-anode lines.' },
+  led: { desc:'Heartbeat LED PD4', pins:'PD4 → 470Ω → LED → GND', fw:'PORTD ^= 0x10 every 500 ISRs main.c:221', flow:'Toggles at 1 Hz. 500×2ms = 1s timing.' },
+  sensor: { desc:'Remote Sensor Board', pins:'UART TX→RX RX←TX GND', fw:'poll_temperature() USART_RXC ISR main.c:249', flow:'External MCU. Replies C/F/H as signed bytes.' },
+  inc: { desc:'PA0 UP button', pins:'PA0 pull-up active-low', fw:'apply_keys() main.c:55', flow:'Increments selected time field in edit mode.' },
+  dec: { desc:'PA1 DOWN button', pins:'PA1 pull-up active-low', fw:'apply_keys() main.c:61', flow:'Decrements selected time field in edit mode.' },
+  right: { desc:'PA2 RIGHT button', pins:'PA2 pull-up active-low', fw:'apply_keys() main.c:52', flow:'Moves cursor forward in edit mode.' },
+  left: { desc:'PA3 LEFT button', pins:'PA3 pull-up active-low', fw:'apply_keys() main.c:53', flow:'Moves cursor backward in edit mode.' },
+  int0: { desc:'PD2 INT0 MODE', pins:'PD2 falling-edge pull-up', fw:'ext_int0_isr() main.c:158', flow:'Cycles TIME→TEMP→FAHR→HUM. Sets temp_request.' },
+  int1: { desc:'PD3 INT1 EDIT', pins:'PD3 falling-edge pull-up', fw:'ext_int1_isr() main.c:165', flow:'Toggles clock_edit flag for time adjustment.' },
+};
+
+document.querySelectorAll('.block-diagram .block').forEach(el => {
+  el.addEventListener('click', function() {
+    document.querySelectorAll('.block-diagram .block').forEach(b => b.classList.remove('highlighted'));
+    this.classList.add('highlighted');
+    const d = compData[this.dataset.comp];
+    if (!d) return;
+    document.getElementById('compInfo').innerHTML =
+      `<div style="font-weight:600;font-size:12px;color:var(--blue);margin-bottom:4px">${d.desc}</div>
+      <div style="margin:4px 0"><span class="tag tag-blue">Pins</span> ${d.pins}</div>
+      <div style="margin:4px 0"><span class="tag tag-green">Firmware</span> <span style="color:var(--cyan)">${d.fw}</span></div>
+      <div style="margin:4px 0"><span class="tag tag-purple">Flow</span> ${d.flow}</div>`;
+  });
+});
+
+// ================================================================
+// SECTION 2: Firmware modules
+// ================================================================
+const fwData = {
+  'disp-mgr': { desc:'Display Manager', files:'main.c seg_code[] display_buf[] update_display()',
+    funcs:'update_display() show_time() show_temperature() draw_env_value() set_blink()',
+    resp:'Fills display_buf based on mode. Sets edit cursor blink flags.',
+    flow:'Main loop → update_display() → display_buf[6] ← Timer2 ISR reads → PORTB' },
+  'sensor-mgr': { desc:'Sensor Manager', files:'main.c poll_temperature() uart_send()',
+    funcs:'poll_temperature() — sends C/F/H if temp_request set\nuartsend() — blocking TX',
+    resp:'Polls remote sensor once per minute. Sends mode-matching command.',
+    flow:'temp_request=1 → poll_temperature() → uart_send(c) → TX byte' },
+  'state-mgr': { desc:'State Machine', files:'main.c mode clock_edit cursor ext_int_isrs',
+    funcs:'INT0: mode++ cycle INT1: clock_edit^=1 apply_keys(): UP/DOWN/LEFT/RIGHT',
+    resp:'Tracks display mode. Manages edit state. Routes key events to time fields.',
+    flow:'INT0→ext_int0_isr()→mode++→update_display()\nINT1→ext_int1_isr()→clock_edit^=1' },
+  'uart-drv': { desc:'UART Driver', files:'main.c uart_init() uart_send() usart_rx_isr()',
+    funcs:'uart_init(): UBRR=51 9600 8N1 uart_send(): polled TX usart_rx_isr(): atomic read',
+    resp:'Initializes USART. Blocking TX. Interrupt-driven RX. Atomic single-byte store.',
+    flow:'TX: wait UDRE → UDR = byte\nRX: ISR → current_temp = (signed char)UDR' },
+  'timer-drv': { desc:'Timer Driver', files:'main.c timer1_compa_isr() timer2_comp_isr()',
+    funcs:'T1: 1s tick → seconds/minutes/hours cascade, temp_request\nT2: 2ms tick → mux, key scan, blink, heartbeat',
+    resp:'T1: real-time clock (1 Hz). T2: display heartbeat (500 Hz). Both CTC, independent.',
+    flow:'T1 CTC → 1s → seconds++ → cascade\nT2 CTC → 2ms → timer2_comp_isr() → 6 actions' },
+  'gpio-drv': { desc:'GPIO Driver', files:'main.c DDRA/B/C/D PORTA/B/C/D',
+    funcs:'Port A: input+pull-ups Port B: output+segments Port C: PC0-5 output+digits Port D: TX+LED+INT',
+    resp:'Configures direction. Pull-ups. Initial states. Disables unused peripherals.',
+    flow:'DDRx → direction → PORTx → output/pull-up' },
+  hw: { desc:'ATmega32 hardware', files:'Proteus .pdsprj SysDig2AVRProject.hex',
+    funcs:'8 MHz AVR · 7SEG-MPX6-CA · Keypad · Sensor UART board',
+    resp:'Physical platform. External sensor handles measurements.',
+    flow:'HW layer provides physical interfaces for HAL.' },
+};
+
+document.querySelectorAll('.fw-layer').forEach(el => {
+  el.addEventListener('click', function() {
+    document.querySelectorAll('.fw-layer').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    const d = fwData[this.dataset.fw];
+    if (!d) return;
+    document.getElementById('fwInfo').innerHTML =
+      `<div style="font-weight:600;font-size:11px;color:var(--blue);margin-bottom:4px">${d.desc}</div>
+      <div style="margin:4px 0"><span class="tag tag-green">Files</span> ${d.files}</div>
+      <div style="margin:4px 0"><span class="tag tag-blue">Functions</span><div style="font-size:9px;color:var(--text);white-space:pre-wrap">${d.funcs}</div></div>
+      <div style="margin:4px 0"><span class="tag tag-orange">Responsibilities</span><div style="font-size:9px;color:var(--text);white-space:pre-wrap">${d.resp}</div></div>`;
+    document.getElementById('fwFlow').innerHTML =
+      `<div style="font-weight:500;color:var(--cyan);margin-bottom:4px">Data Flow:</div>
+      <div style="font-size:9px;color:var(--text);white-space:pre-wrap">${d.flow}</div>`;
+  });
+});
+
+// ================================================================
+// SECTION 3: Workflow
+// ================================================================
+const wfSteps = [
+  { label:'Power-On Reset', func:'Reset vector (0x002)', detail:'POR generated. PC jumps to RESET. Stack pointer initialized.' },
+  { label:'Init Ports', func:'DDRA/B/C/D PORTA/B/C/D', detail:'PA0-3 input+pull-ups. PB output (segments). PC0-5 output (digits). PD1/PD4 output. PD2/PD3 INT input.' },
+  { label:'Init Timer1', func:'TCCR1B OCR1AH/L', detail:'CTC /256 OCR1A=31249 → 1.000 s period for timekeeping.' },
+  { label:'Init Timer2', func:'TCCR2 OCR2', detail:'CTC /64 OCR2=249 → 250 counts × 8 µs = 2.000 ms → 500 Hz ISR.' },
+  { label:'Init UART + INTs', func:'uart_init() GICR MCUCR', detail:'UBRR=51 9600 8N1. INT0/INT1 falling-edge. TIMSK=OCIE1A|OCIE2.' },
+  { label:'sei()', func:'#asm("sei")', detail:'Global interrupt enable. System goes live. Timers start counting.' },
+  { label:'T2 Mux Starts', func:'timer2_comp_isr()', detail:'2ms ticks begin. ISR: disable digit → seg data → colon → enable digit → advance → heartbeat.' },
+  { label:'INT0 → Mode cycle', func:'ext_int0_isr()', detail:'PD2 falling edge → mode++. Cycles TIME→TEMP→FAHR→HUM→TIME. Sets temp_request.' },
+  { label:'INT1 → Edit toggle', func:'ext_int1_isr()', detail:'PD3 falling edge → clock_edit^=1. Keys become active for time adjustment.' },
+  { label:'UART poll', func:'poll_temperature()', detail:'Every minute or mode change: send C/F/H byte → sensor replies → USART_RXC ISR stores value.' },
+];
+
+function buildWorkflow() {
+  const c = document.getElementById('wfContainer');
+  c.innerHTML = '';
+  wfSteps.forEach((s, i) => {
+    const d = document.createElement('div');
+    d.className = 'workflow-step';
+    d.dataset.idx = i;
+    d.innerHTML = `<div class="dot"></div><div><div>${s.label}</div><div class="fn">${s.func}</div></div>`;
+    d.addEventListener('click', () => setWFStep(i));
+    c.appendChild(d);
+  });
+}
+buildWorkflow();
+
+let wfInt = null, wfStep = -1;
+function setWFStep(i) {
+  wfStep = i;
+  document.querySelectorAll('.workflow-step').forEach((e, j) => e.classList.toggle('active', j === i));
+  document.getElementById('wfStepLabel').textContent = (i + 1) + '/' + wfSteps.length;
+  const s = wfSteps[i];
+  document.getElementById('wfInfo').innerHTML =
+    `<div style="font-weight:600;font-size:11px;color:var(--blue);margin-bottom:4px">Step ${i+1}: ${s.label}</div>
+    <div style="margin:4px 0"><span class="tag tag-blue">Function</span> <span style="color:var(--cyan)">${s.func}</span></div>
+    <div style="margin:4px 0"><span class="tag tag-orange">Details</span><div style="font-size:9px;color:var(--text);white-space:pre-wrap">${s.detail}</div></div>`;
+  addTL('step', s.label, s.func);
+}
+document.getElementById('wfPlay').addEventListener('click', () => {
+  if (wfInt) clearInterval(wfInt);
+  if (wfStep < 0 || wfStep >= wfSteps.length - 1) wfStep = -1;
+  wfInt = setInterval(() => { wfStep++; if (wfStep >= wfSteps.length) wfStep = 0; setWFStep(wfStep); }, 1500);
+});
+document.getElementById('wfPause').addEventListener('click', () => { if (wfInt) { clearInterval(wfInt); wfInt = null; } });
+document.getElementById('wfReset').addEventListener('click', () => {
+  if (wfInt) { clearInterval(wfInt); wfInt = null; }
+  wfStep = -1;
+  document.querySelectorAll('.workflow-step').forEach(e => e.classList.remove('active'));
+  document.getElementById('wfStepLabel').textContent = '0/10';
+  document.getElementById('wfInfo').innerHTML = '<div style="color:var(--text2)">Click Play or Step.</div>';
+});
+document.getElementById('wfStep').addEventListener('click', () => { wfStep++; if (wfStep >= wfSteps.length) wfStep = 0; setWFStep(wfStep); });
+
+// ================================================================
+// SECTION 4: Display Controls
+// ================================================================
+document.getElementById('btnModeCycle').addEventListener('click', () => {
+  sim.mode = (sim.mode + 1) % 4;
+  sim.temp_request = 1;
+});
+document.getElementById('btnEditToggle').addEventListener('click', () => { sim.clock_edit ^= 1; });
+document.getElementById('btnInc').addEventListener('click', () => {
+  if (!sim.clock_edit) return;
+  if (sim.cursor === 0) { sim.hours = (sim.hours + 1) % 24; }
+  else if (sim.cursor === 1) { sim.minutes = (sim.minutes + 1) % 60; }
+  else { sim.seconds = (sim.seconds + 1) % 60; }
+});
+document.getElementById('btnDec').addEventListener('click', () => {
+  if (!sim.clock_edit) return;
+  if (sim.cursor === 0) { if (sim.hours === 0) sim.hours = 23; else sim.hours--; }
+  else if (sim.cursor === 1) { if (sim.minutes === 0) sim.minutes = 59; else sim.minutes--; }
+  else { if (sim.seconds === 0) sim.seconds = 59; else sim.seconds--; }
+});
+document.getElementById('btnRight').addEventListener('click', () => { if (sim.clock_edit && sim.cursor < 2) sim.cursor++; });
+document.getElementById('btnLeft').addEventListener('click', () => { if (sim.clock_edit && sim.cursor > 0) sim.cursor--; });
+
+// ================================================================
+// SECTION 5: UART
+// ================================================================
+function uartSend(byte) {
+  const c = String.fromCharCode(byte);
+  const names = { 0x43:'Celsius', 0x46:'Fahrenheit', 0x48:'Humidity' };
+  addTL('uart', 'TX 0x' + byte.toString(16).toUpperCase(), names[byte] + ' \'' + c + '\'');
+
+  // TX frame
+  const txf = document.getElementById('uartTXFrame');
+  txf.innerHTML = '<div class="uart-bit start">ST</div>';
+  for (let i = 0; i < 8; i++) txf.innerHTML += '<div class="uart-bit data" style="background:' + (((byte>>i)&1) ? 'var(--blue2)' : '#0d1117') + '">' + ((byte>>i)&1) + '</div>';
+  txf.innerHTML += '<div class="uart-bit stop">SP</div>';
+
+  const tl = document.getElementById('uartTimeline');
+  tl.innerHTML = '<div style="display:flex;flex-direction:column;gap:3px"><div style="display:flex;gap:6px;align-items:center;color:var(--blue);font-size:9px"><span class="status-dot cyan"></span> TX: 0x' + byte.toString(16).toUpperCase() + ' (\'' + c + '\') → Sensor</div><div style="font-size:8px;color:var(--text2);padding-left:14px">Frame: 1.042 ms @ 9600 baud</div>';
+
+  setTimeout(() => {
+    let reply = sim.current_temp;
+    if (byte === 0x46) reply = Math.round(sim.current_temp * 1.8 + 32);
+    else if (byte === 0x48) reply = Math.round(45 + Math.random() * 30);
+    if (reply > 127) reply = 127; if (reply < -128) reply = -128;
+    sim.current_temp = reply;
+    const rv = reply & 0xFF;
+    const rxf = document.getElementById('uartRXFrame');
+    rxf.innerHTML = '<div class="uart-bit start">ST</div>';
+    for (let i = 0; i < 8; i++) rxf.innerHTML += '<div class="uart-bit data" style="background:' + (((rv>>i)&1) ? 'var(--green)' : '#0d1117') + '">' + ((rv>>i)&1) + '</div>';
+    rxf.innerHTML += '<div class="uart-bit stop">SP</div>';
+
+    const rname = byte === 0x43 ? '°C' : (byte === 0x46 ? '°F' : '%');
+    addTL('uart', 'RX: ' + reply + rname, '0x' + rv.toString(16).toUpperCase());
+    tl.innerHTML += '<div style="display:flex;gap:6px;align-items:center;color:var(--green);font-size:9px;margin-top:4px"><span class="status-dot green"></span> RX: ' + reply + rname + ' ← Sensor</div><div style="font-size:8px;color:var(--text2);padding-left:14px">Transaction: ' + (2.1).toFixed(1) + ' ms + sensor latency</div>';
+  }, 600);
+}
+
+document.getElementById('uartSendC').addEventListener('click', () => uartSend(0x43));
+document.getElementById('uartSendF').addEventListener('click', () => uartSend(0x46));
+document.getElementById('uartSendH').addEventListener('click', () => uartSend(0x48));
+
+let uartAutoOn = true;
+document.getElementById('uartAuto').addEventListener('click', function() {
+  uartAutoOn = !uartAutoOn;
+  this.classList.toggle('active');
+  this.textContent = uartAutoOn ? 'ON' : 'OFF';
+});
+// Auto-poll every ~10 simulated seconds
+let uartAutoTimer = setInterval(() => {
+  if (!uartAutoOn) return;
+  if (sim.mode === 1) uartSend(0x43);
+  else if (sim.mode === 2) uartSend(0x46);
+  else if (sim.mode === 3) uartSend(0x48);
+}, 10000);
+
+// ================================================================
+// SECTION 6: Registers
+// ================================================================
+const regList = [
+  { n:'DDRA', a:'0x3A', v:'0x00', b:'00000000', d:'Data Direction A — all input' },
+  { n:'DDRB', a:'0x37', v:'0xFF', b:'11111111', d:'Data Direction B — all output (segments)' },
+  { n:'DDRC', a:'0x34', v:'0x3F', b:'00111111', d:'Data Direction C — PC0-5 out (digits)' },
+  { n:'DDRD', a:'0x31', v:'0x12', b:'00010010', d:'Data Direction D — PD1 TX, PD4 LED out' },
+  { n:'PORTA', a:'0x3B', v:'0x0F', b:'00001111', d:'Pull-ups on PA0-3 (keypad active-low)' },
+  { n:'PORTB', a:'0x38', v:'0x00', b:'00000000', d:'Segment data registers (active-low)' },
+  { n:'PORTC', a:'0x35', v:'0x00', b:'00000000', d:'Digit enable (one-hot, active-high)' },
+  { n:'PORTD', a:'0x32', v:'0x0C', b:'00001100', d:'PD2/PD3 pull-ups, PD4 toggles LED' },
+  { n:'TCCR1B','a':'0x4E', v:'0x0D', b:'00001101', d:'T1 CTC /256 WGM12=1 CS12=1' },
+  { n:'OCR1AH','a':'0x4B', v:'0x7A', b:'01111010', d:'OCR1A high byte = 0x7A' },
+  { n:'OCR1AL','a':'0x4A', v:'0x11', b:'00010001', d:'OCR1A low byte = 0x11 (total 31249)' },
+  { n:'TCCR2', a:'0x45', v:'0x1E', b:'00011110', d:'T2 CTC /64 CTC2=1 CS22=1' },
+  { n:'OCR2', a:'0x43', v:'0xF9', b:'11111001', d:'Output Compare = 249 (0xF9) → 2ms' },
+  { n:'TIMSK', a:'0x59', v:'0xC0', b:'11000000', d:'OCIE1A=1 OCIE2=1 Timer IRQ enable' },
+  { n:'UBRRL', a:'0x29', v:'0x33', b:'00110011', d:'Baud low = 51 (9600 @ 8MHz)' },
+  { n:'UCSRB', a:'0x2A', v:'0xDC', b:'11011100', d:'RXCIE=1 TXEN=1 RXEN=1' },
+  { n:'UCSRC', a:'0x40', v:'0x86', b:'10000110', d:'8N1 URSEL=1 UCSZ1=1 UCSZ0=1' },
+  { n:'MCUCR', a:'0x55', v:'0x0A', b:'00001010', d:'INT0/INT1 falling-edge trigger' },
+  { n:'GICR', a:'0x5B', v:'0xC0', b:'11000000', d:'INT0=1 INT1=1 external IRQ enable' },
+];
+
+const grid = document.getElementById('regGrid');
+regList.forEach(r => {
+  const card = document.createElement('div');
+  card.className = 'reg-card';
+  card.innerHTML =
+    `<div class="reg-name">${r.n}</div>
+    <div class="reg-val">${r.a} = ${r.v}</div>
+    <div class="reg-bits">${r.b.split('').map((b,i)=>'<div class="reg-bit bit-'+b+'">'+(7-i)+'</div>').join('')}</div>`;
+  card.addEventListener('click', function() {
+    document.querySelectorAll('.reg-card').forEach(c => c.classList.remove('active'));
+    this.classList.add('active');
+    document.getElementById('regDetail').innerHTML =
+      `<div style="font-weight:600;font-size:12px;color:var(--blue);margin-bottom:4px">${r.n}</div>
+      <div style="color:var(--text2);font-size:9px">Address ${r.a} = ${r.v}</div>
+      <div style="margin:6px 0"><span class="tag tag-blue">Bits</span></div>
+      <div style="display:flex;gap:1px;margin:4px 0">${r.b.split('').map((b,i)=>'<div style="width:24px;text-align:center;padding:2px 0;border-radius:2px;background:'+(b==='1'?'var(--blue2)':'var(--bg)')+';font-size:8px;font-weight:500">'+(7-i)+'</div>').join('')}</div>
+      <div style="display:flex;gap:1px;margin:4px 0">${r.b.split('').map((b,i)=>'<div style="width:24px;text-align:center;font-size:8px;color:'+(b==='1'?'var(--blue)':'var(--text2)')+'">'+b+'</div>').join('')}</div>
+      <div style="margin:6px 0"><span class="tag tag-orange">Description</span></div>
+      <div style="font-size:9px;color:var(--text)">${r.d}</div>`;
+  });
+  grid.appendChild(card);
+});
+
+// ================================================================
+// SECTION 7: Signal Flow
+// ================================================================
+let sfRun = false, sfInt = null;
+const sfNodes = [
+  ['Sensor', 'Temp/humidity sensor on remote AVR board'],
+  ['Conditioning', 'Voltage scaling, filtering, UART formatting'],
+  ['MCU RX', 'USART RXC interrupt fires. Byte received. 1.042ms frame.'],
+  ['ISR', 'current_temp = (signed char)UDR. Atomic store.'],
+  ['Display', 'update_display() formats. Timer2 muxes to 7-seg at 83Hz.']
+];
+
+document.getElementById('sfStart').addEventListener('click', () => {
+  if (sfInt) return;
+  sfRun = true;
+  document.getElementById('sfStatus').textContent = 'Flowing...';
+  let idx = 0;
+  sfInt = setInterval(() => {
+    if (!sfRun) { clearInterval(sfInt); sfInt = null; return; }
+    document.querySelectorAll('.signal-node').forEach(n => n.classList.remove('active'));
+    const nodes = document.querySelectorAll('.signal-node');
+    if (nodes[idx]) nodes[idx].classList.add('active');
+    document.getElementById('sfDetail').innerHTML = `<div style="font-weight:600;font-size:10px;color:var(--blue)">${sfNodes[idx][0]}</div><div style="font-size:9px;color:var(--text)">${sfNodes[idx][1]}</div>`;
+    // Particle
+    if (idx < 4) {
+      const p = document.createElement('div');
+      p.className = 'flow-particle';
+      const flow = document.getElementById('signalFlow');
+      const n1 = nodes[idx], n2 = nodes[idx+1];
+      if (n1 && n2) {
+        const r1 = n1.getBoundingClientRect(), r2 = n2.getBoundingClientRect(), fR = flow.getBoundingClientRect();
+        p.style.left = (r1.left - fR.left + r1.width/2 - 3) + 'px';
+        p.style.top = (r1.top - fR.top + r1.height/2 - 3) + 'px';
+        const dur = 400;
+        p.style.transition = 'all ' + dur + 'ms linear';
+        flow.appendChild(p);
+        requestAnimationFrame(() => {
+          p.style.left = (r2.left - fR.left + r2.width/2 - 3) + 'px';
+          p.style.top = (r2.top - fR.top + r2.height/2 - 3) + 'px';
+        });
+        setTimeout(() => p.remove(), dur + 50);
+      }
+    }
+    idx = (idx + 1) % 5;
+  }, 1200);
+});
+document.getElementById('sfStop').addEventListener('click', () => {
+  sfRun = false;
+  if (sfInt) { clearInterval(sfInt); sfInt = null; }
+  document.getElementById('sfStatus').textContent = 'Stopped';
+  document.querySelectorAll('.signal-node').forEach(n => n.classList.remove('active'));
+});
+
+// ================================================================
+// SECTION 8: Timeline
+// ================================================================
+function addTL(tag, label, detail) {
+  const tl = document.getElementById('timeline');
+  const d = new Date();
+  const ts = String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+':'+String(d.getSeconds()).padStart(2,'0');
+  const t = document.createElement('div');
+  t.className = 'entry';
+  const tc = { boot:'tag-ok', step:'tag', event:'tag-event', action:'tag-action', uart:'tag-uart', tick:'tag-ok', ok:'tag-ok' };
+  t.innerHTML = `<span class="time">[${ts}]</span><span class="tag ${tc[tag]||''}">[${tag.toUpperCase()}]</span><span>${label}</span><span style="color:var(--text2)">${detail?'— '+detail:''}</span>`;
+  tl.prepend(t);
+  if (tl.children.length > 200) tl.removeChild(tl.lastChild);
+  document.getElementById('tlCount').textContent = tl.children.length;
+}
+
+let tlInt = null;
+document.getElementById('tlStart').addEventListener('click', () => {
+  if (tlInt) return;
+  addTL('boot','Simulation started','AVR cycle-accurate engine');
+  const events = [
+    [500,'ok','PORTS','DDRA/B/C/D configured'],
+    [1000,'ok','TIMER1','CTC /256 OCR1A=31249 → 1 Hz'],
+    [1500,'ok','TIMER2','CTC /64 OCR2=249 → 500 Hz'],
+    [2000,'ok','UART','UBRR=51 9600 8N1 RXCIE'],
+    [2500,'ok','INTs','INT0/INT1 falling-edge pull-ups'],
+    [3000,'ok','sei()','Global interrupts enabled'],
+    [3500,'ok','Display','update_display() priming call'],
+    [4000,'event','Super-loop','poll_temperature() + update_display()'],
+  ];
+  let i = 0;
+  tlInt = setInterval(() => {
+    if (i >= events.length) { clearInterval(tlInt); tlInt = null; return; }
+    const e = events[i++];
+    setTimeout(() => addTL(e[1], e[2], e[3]), e[0]);
+  }, 180);
+});
+document.getElementById('tlStop').addEventListener('click', () => { if (tlInt) { clearInterval(tlInt); tlInt = null; } });
+document.getElementById('tlClear').addEventListener('click', () => { document.getElementById('timeline').innerHTML = ''; document.getElementById('tlCount').textContent = '0'; });
+
+// ================================================================
+// BOOT LOG
+// ================================================================
+addTL('boot','Power-On Reset','ATmega32 @ 8 MHz');
+addTL('ok','Timer2','CTC /64 OCR2=0xF9 → 2.000 ms');
+addTL('ok','Timer1','CTC /256 OCR1A=31249 → 1.000 s');
+addTL('ok','UART','9600 8N1 UBRR=0x33');
+addTL('ok','INT0/INT1','PD2/PD3 falling-edge enabled');
+addTL('ok','sei()','Global interrupts enabled — system live');
+addTL('ok','Display mux','6 digits @ 83.3 Hz refresh');
+
+// ================================================================
+// START SIMULATION
+// ================================================================
+sim.lastFrameTime = 0;
+rafId = requestAnimationFrame(simLoop);
+
+console.log('AVR Simulator — Cycle-Accurate Engine');
+console.log('F_CPU =', F_CPU, 'Hz');
+console.log('Timer2:', T2_CLOCK, 'Hz clock, OCR2=', OCR2, '→', T2_ISR_FREQ, 'Hz ISR');
+console.log('Timer1:', T1_CLOCK, 'Hz clock, OCR1A=', OCR1A, '→ 1 Hz ISR');
+</script>
+</body>
+</html>

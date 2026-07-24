@@ -210,21 +210,166 @@ Additional screenshots (Fahrenheit, humidity, and negative-value tests) are coll
 
 > **Note:** The block/FSM/firmware-architecture/timing diagrams (SVG) are included in `assets/figures/`. The Proteus simulation and UART-injection screenshots (`SSS.png`, `c.png`, `f.png`, `h.png`, `manfi.png`, `dr.png`) still need to be added to that folder.
 
+## Interactive Browser-Based Simulator
+
+Alongside the Proteus simulation, this project now includes a **cycle-accurate interactive web simulator** that visualizes every aspect of the AVR firmware — from the hardware block diagram down to individual register bit fields — directly in a browser.
+
+> Built with **HTML / CSS / JavaScript** using a Vibe Coding (AI-assisted) workflow. The simulator reads no external dependencies; open `index.html` and it runs.
+
+[![Live Demo](https://img.shields.io/badge/demo-github_pages-blue?style=flat-square)](#) *(GitHub Pages link — coming soon)*
+
+### Purpose & Philosophy
+
+The simulator is designed as an **interactive documentation layer** that sits alongside the real AVR firmware (`main.c`) and the Proteus simulation model. It does **not** replace either:
+
+- **Proteus** validates the circuit-level behavior (timing, voltage levels, signal integrity).
+- **The web simulator** visualizes the *logical* architecture, data flow, and firmware workflow at a level that is easier to explore and experiment with interactively.
+
+Open the simulator to understand *how* the system works, then read `main.c` or the Proteus model to see *exactly* how it is implemented.
+
+### How to Use
+
+**Online (once deployed):**  
+Visit the GitHub Pages URL (placeholder above). No installation required.
+
+**Locally:**  
+Open `index.html` in any modern browser (Chrome, Firefox, Edge recommended).
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/atmega32-multiplexed-clock-envmonitor.git
+cd atmega32-multiplexed-clock-envmonitor
+
+# Open the simulator
+open index.html          # macOS
+start index.html         # Windows
+xdg-open index.html      # Linux
+```
+
+### Simulator Sections
+
+The browser interface is organized into 8 interactive panels, accessible via the top navigation bar:
+
+---
+
+#### 1 — System Architecture Overview
+![Screenshot placeholder — Block diagram with highlighted component](assets/figures/sim-s1.png)  
+*Figure: Interactive SVG block diagram. Click any component — MCU, timer, port, sensor — to see its pins, firmware module, and data flow highlighted.*
+
+The full system block diagram rendered as an SVG. Every block is clickable; selecting a component opens a detail panel with its purpose, pin assignments, the C functions that drive it, and the data path through the system.
+
+---
+
+#### 2 — Firmware Architecture
+![Screenshot placeholder — Firmware layers with selected module detail](assets/figures/sim-s2.png)  
+*Figure: Three-layer software hierarchy. Click any module to inspect its functions, files, and data flow.*
+
+The firmware decomposed into Application layer (Display Manager, Sensor Manager, State Machine), HAL layer (UART Driver, Timer Driver, GPIO Driver), and Hardware. Each layer is independently selectable.
+
+---
+
+#### 3 — Runtime Workflow / State Machine
+![Screenshot placeholder — Animated workflow with Play/Step controls](assets/figures/sim-s3.png)  
+*Figure: 10-step animated boot and runtime workflow. Play to watch the system start, or step through each phase.*
+
+Walks through the system lifecycle: Power-On Reset → Port Init → Timer1/Timer2 Configuration → UART & Interrupt Setup → `sei()` → Multiplexing Start → Mode Cycling → Edit Toggle → UART Polling. Each step shows the C function responsible and a detailed explanation.
+
+---
+
+#### 4 — Live 7-Segment Display & Debug Panel
+![Screenshot placeholder — Multiplexed display with debug values](assets/figures/sim-s4.png)  
+*Figure: Live simulated display driven by the virtual Timer2 ISR, alongside a full AVR timing debug panel.*
+
+**Left:** A real-time 7-segment display showing the current mode (TIME/TEMP/FAHR/HUM) with colon blink and edit cursor blink. Control buttons allow mode cycling, edit toggle, and keypad simulation.  
+**Right:** The AVR timing debug panel showing live values: CPU cycles, Timer2 `TCNT2`, `OCR2`, ISR count and measured frequency (should read ~500 Hz at 1× speed), heartbeat counter, refresh progress, and blink tick.
+
+---
+
+#### 5 — UART Communication Visualizer
+![Screenshot placeholder — UART transaction with frame bits](assets/figures/sim-s5.png)  
+*Figure: Interactive UART transaction viewer. Send C/F/H commands and watch the 10-bit frame animate.*
+
+Shows the request/response protocol byte-by-byte. Click "Send 'C'" to see the TX frame (start bit + 8 data bits + stop bit) at 9600 baud, followed by the simulated sensor reply and RX frame. Also includes the UART register configuration table (UBRR, UCSRB, UCSRC).
+
+---
+
+#### 6 — MCU Register View
+![Screenshot placeholder — Register grid with bit-field detail](assets/figures/sim-s6.png)  
+*Figure: Grid of 19 MCU registers with bit-level visualization. Click any register to see its fields and firmware usage.*
+
+Displays all configured registers: DDRA–D, PORTA–D, TCCR1B, OCR1AH/L, TCCR2, OCR2, TIMSK, UBRRL, UCSRB/C, MCUCR, GICR. Each register shows its address, current value, and an 8-bit visual bit-field grid. Clicking a register expands a detail view with bit-by-bit explanations.
+
+---
+
+#### 7 — Hardware Signal Flow
+![Screenshot placeholder — Animated data path through the system](assets/figures/sim-s7.png)  
+*Figure: Animated signal path from the sensor through the MCU to the display.*
+
+A particle-animated pipeline showing how data flows: Sensor → Signal Conditioning → MCU Input Capture → ISR Processing → Display Output. Each stage is annotated with its latency and function.
+
+---
+
+#### 8 — Execution Trace / Timeline
+![Screenshot placeholder — Real-time event log](assets/figures/sim-s8.png)  
+*Figure: System event log showing boot sequence, ISR events, and runtime actions in real time.*
+
+A scrolling event log that captures all system events: boot initialization steps, Timer2 ISR ticks, UART transactions, mode changes, and edit events. Entries are timestamped and color-coded by type.
+
+### Simulation Speed Control
+
+A speed slider in the status bar lets you run the virtual AVR at:
+
+| Speed | Effect |
+|-------|--------|
+| **0.5×** | Half-speed — watch multiplexing details at leisure |
+| **1×** | Real-time — exactly matches the real ATmega32 @ 8 MHz |
+| **2×** | Double-speed — speeds up clock and display |
+| **10×** | Fast-forward — useful for observing long-term behavior |
+| **50×** | Maximum speed — verify hour rollover and polling cadence |
+
+### Timing Model
+
+The simulator implements a **cycle-accurate virtual AVR clock engine**:
+
+- F_CPU = 8,000,000 Hz
+- Timer2: prescaler `/64`, 125 kHz tick rate, OCR2 = 249 → compare match every **250 counts** = **2.000 ms** → **500 Hz ISR**
+- Timer1: prescaler `/256`, 31250 Hz tick rate, OCR1A = 31249 → compare match every **31250 counts** = **1.000 s**
+- The main `requestAnimationFrame` loop accumulates elapsed wall-clock time, scales it by the speed multiplier, and drives both timer counters in microsecond-accurate steps
+- All timing relationships (500 ISRs = 1 second, 6 digits × 2 ms = 12 ms frame = 83.3 Hz) emerge naturally from the virtual counter logic
+
+### Technologies
+
+| Technology | Purpose |
+|---|---|
+| **HTML5** | Document structure and semantic layout |
+| **CSS3** | Dark engineering-theme UI with custom properties |
+| **Vanilla JavaScript** | Cycle-accurate virtual AVR engine, SVG manipulation, `requestAnimationFrame` render loop |
+| **SVG inline** | Block diagrams, 7-segment glyphs, and bit-field visualizations |
+| **Vibe Coding (AI-assisted)** | Rapid development and iteration of the simulator architecture |
+
+### Screenshots
+
+Screenshot placeholders (`sim-s1.png` through `sim-s8.png`) are located in [`assets/figures/`](assets/figures/). Replace them with actual browser captures of each panel.
+
+---
+
 ## Repository Structure
 
 ```
 .
 ├── README.md                 ← you are here
+├── index.html                 Interactive browser-based AVR simulator (this project)
 ├── src/
-│   └── main.c                 [Add firmware source file here]
+│   └── main.c                 AVR firmware source (CodeVisionAVR C)
 ├── assets/
-│   └── figures/                [Insert figure here — schematic, block diagram, FSM, simulation screenshots]
-└── docs/
-    ├── hardware.md            Pin mapping, components, schematic, MCU peripherals
-    ├── setup.md                Toolchain, build, and simulation environment
-    ├── implementation.md      ISRs, code listings, display buffer, debouncing, timing analysis
-    ├── experiments.md         Full UART injection test log and additional screenshots
-    └── references.md          Datasheets, tools, and course material referenced
+│   └── figures/               SVG architecture diagrams, simulation screenshots, screenshot placeholders
+├── docs/
+│   ├── hardware.md            Pin mapping, components, schematic, MCU peripherals
+│   ├── setup.md               Toolchain, build, and simulation environment
+│   ├── implementation.md      ISRs, code listings, display buffer, debouncing, timing analysis
+│   ├── experiments.md         Full UART injection test log and additional screenshots
+│   └── references.md          Datasheets, tools, and course material referenced
+└── Proteus/                   Proteus Design Suite simulation files
 ```
 
 ## Documentation
