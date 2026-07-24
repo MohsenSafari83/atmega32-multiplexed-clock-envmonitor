@@ -29,12 +29,12 @@ This repository implements an embedded instrument that combines a **real-time cl
 
 The same 6 physical digits are reused, via time-division multiplexing, to present four logical screens:
 
-| Screen  | Content                                  |
-|---------|-------------------------------------------|
-| `TIME`  | 24-hour clock, `HH:MM:SS`, blinking colons |
-| `TEMP`  | Ambient temperature in °C                  |
-| `FAHR`  | Ambient temperature in °F                  |
-| `HUM`   | Relative humidity in %                     |
+| Screen | Content                                    |
+| ------ | ------------------------------------------ |
+| `TIME` | 24-hour clock, `HH:MM:SS`, blinking colons |
+| `TEMP` | Ambient temperature in °C                  |
+| `FAHR` | Ambient temperature in °F                  |
+| `HUM`  | Relative humidity in %                     |
 
 Environmental data is **not** measured on this board — it is requested on demand from a separate sensor microcontroller over a simple UART request/response protocol, keeping the display firmware free of any analog measurement or unit-conversion logic.
 
@@ -45,7 +45,7 @@ Driving more than 2–3 seven-segment digits directly would require far too many
 - Precise timekeeping independent of a busy display refresh loop
 - Deterministic multiplexing without visible flicker or ghosting
 - Debounced keypad input for interactive editing
-- A visual "edit cursor" that blinks a *specific pair of digits* without disturbing the rest of the display
+- A visual "edit cursor" that blinks a _specific pair of digits_ without disturbing the rest of the display
 - A minimal, unit-agnostic protocol for talking to an external sensor board
 
 ## Features
@@ -71,19 +71,19 @@ The system is split into two cooperating subsystems:
 2. **Remote sensor board** — a separate AVR (treated as a black box) that performs the analog measurements and answers UART requests with pre-scaled byte values
 
 ![System block diagram](assets/figures/BLOCK_DIAGRAM.svg)
-*Figure: ATmega32 controller board — Port A (keypad), Port B (segment lines), Port C (digit enables), and Port D (UART, INT0/INT1 buttons, heartbeat LED) — communicating with the remote sensor board over a 9600 baud UART link.*
+_Figure: ATmega32 controller board — Port A (keypad), Port B (segment lines), Port C (digit enables), and Port D (UART, INT0/INT1 buttons, heartbeat LED) — communicating with the remote sensor board over a 9600 baud UART link._
 
 Full pin mapping and component list: **[docs/hardware.md](docs/hardware.md)**
 
 ### Screen & Edit-Mode State Machine
 
 ![Finite state machine](assets/figures/FSM_DIAGRAM_MERGED.svg)
-*Figure: The four display screens cycled by INT0 (`TIME → TEMP → FAHR → HUM`), with INT1 toggling edit mode and the keypad driving cursor navigation and field adjustment within it.*
+_Figure: The four display screens cycled by INT0 (`TIME → TEMP → FAHR → HUM`), with INT1 toggling edit mode and the keypad driving cursor navigation and field adjustment within it._
 
 ### Firmware Architecture
 
 ![Firmware architecture](assets/figures/FW_ARCHITECTURE.svg)
-*Figure: The non-blocking main loop (temperature polling + display update) alongside the five interrupt service routines that handle all time-critical work — screen switching, edit toggling, timekeeping, multiplexing, and UART reception.*
+_Figure: The non-blocking main loop (temperature polling + display update) alongside the five interrupt service routines that handle all time-critical work — screen switching, edit toggling, timekeeping, multiplexing, and UART reception._
 
 ## Multiplexing: The Core Idea
 
@@ -92,16 +92,16 @@ In a common-anode display, a digit is enabled by driving its anode line HIGH, an
 The firmware cycles through the six digits at a fixed 2 ms interval, driven by Timer2:
 
 1. Turn off all digits (`PORTC = 0x00`) — prevents ghosting during the segment-data transition.
-2. Load the segment pattern for the *next* digit onto `PORTB`.
+2. Load the segment pattern for the _next_ digit onto `PORTB`.
 3. Conditionally light the colon decimal points (TIME mode only).
 4. Enable that digit's anode via `PORTC`.
 5. Advance the digit counter (mod 6).
 
-| Parameter | Value |
-|---|---|
-| Digit ON time | 2 ms |
-| Full frame (6 digits) | 12 ms |
-| Refresh rate | ≈ 83.3 Hz (well above flicker-fusion threshold) |
+| Parameter             | Value                                           |
+| --------------------- | ----------------------------------------------- |
+| Digit ON time         | 2 ms                                            |
+| Full frame (6 digits) | 12 ms                                           |
+| Refresh rate          | ≈ 83.3 Hz (well above flicker-fusion threshold) |
 
 Because the human eye cannot resolve individual digit flashes above ~60 Hz, all six digits appear continuously and simultaneously lit.
 
@@ -129,27 +129,27 @@ This means `update_display()` can take a variable amount of time (branching per 
 
 ### Interrupt Map
 
-| Priority | Source | Responsibility |
-|---|---|---|
-| 1 | `INT0` | Cycle active screen (`TIME → TEMP → FAHR → HUM`) |
-| 2 | `INT1` | Toggle clock edit mode |
-| 3 | `TIM1_COMPA` | One-second timekeeping (seconds/minutes/hours) |
-| 4 | `TIM2_COMP` | 2 ms tick: keypad scan, multiplexing, blink, heartbeat |
-| 5 | `USART_RXC` | Store incoming sensor reply byte |
+| Priority | Source       | Responsibility                                         |
+| -------- | ------------ | ------------------------------------------------------ |
+| 1        | `INT0`       | Cycle active screen (`TIME → TEMP → FAHR → HUM`)       |
+| 2        | `INT1`       | Toggle clock edit mode                                 |
+| 3        | `TIM1_COMPA` | One-second timekeeping (seconds/minutes/hours)         |
+| 4        | `TIM2_COMP`  | 2 ms tick: keypad scan, multiplexing, blink, heartbeat |
+| 5        | `USART_RXC`  | Store incoming sensor reply byte                       |
 
 Deep-dive into each ISR, the glyph/blink mechanism, and full code listings: **[docs/implementation.md](docs/implementation.md)**
 
 ## Timing Design
 
 ![Timing diagram](assets/figures/TIMING.svg)
-*Figure: Timer1's 1 Hz compare-match tick driving the clock, alongside Timer2's 2 ms cadence that drives multiplexing, keypad scanning, edit-cursor blink, and the heartbeat LED.*
+_Figure: Timer1's 1 Hz compare-match tick driving the clock, alongside Timer2's 2 ms cadence that drives multiplexing, keypad scanning, edit-cursor blink, and the heartbeat LED._
 
 Two hardware timers, both in CTC (Clear-Timer-on-Compare-Match) mode, anchor every time-based behavior in the system:
 
-| Timer | Mode | Prescaler | Compare value | Resulting rate | Purpose |
-|---|---|---|---|---|---|
-| Timer1 (16-bit) | CTC | /256 | 31250 | **1 Hz** | Clock tick (seconds/minutes/hours) |
-| Timer2 (8-bit) | CTC | /64 | 250 | **500 Hz** (2 ms) | Multiplexing, keypad scan, blink, heartbeat |
+| Timer           | Mode | Prescaler | Compare value | Resulting rate    | Purpose                                     |
+| --------------- | ---- | --------- | ------------- | ----------------- | ------------------------------------------- |
+| Timer1 (16-bit) | CTC  | /256      | 31250         | **1 Hz**          | Clock tick (seconds/minutes/hours)          |
+| Timer2 (8-bit)  | CTC  | /64       | 250           | **500 Hz** (2 ms) | Multiplexing, keypad scan, blink, heartbeat |
 
 Derived timing behavior:
 
@@ -164,7 +164,7 @@ Full derivations and the timing diagram: **[docs/implementation.md](docs/impleme
 The display board and sensor board exchange exactly one byte in each direction, at 9600 baud / 8N1:
 
 ![Sensor communication protocol](assets/figures/SENSOR_PROTOCOL.svg)
-*Figure: Request/response exchange between the ATmega32 and the sensor board — one request byte out, one pre-scaled reply byte back, followed by an atomic, interrupt-driven store into `current_temp`.*
+_Figure: Request/response exchange between the ATmega32 and the sensor board — one request byte out, one pre-scaled reply byte back, followed by an atomic, interrupt-driven store into `current_temp`._
 
 - The request byte identifies the unit currently being displayed.
 - The reply is **already scaled** to that unit — the display firmware performs no conversion arithmetic.
@@ -178,7 +178,7 @@ The design was verified in **Proteus Design Suite**, with `final.hex` (this firm
 ### Functional Behavior
 
 ![Proteus simulation of the ATmega32 driving the 7SEG-MPX6-CA display](assets/figures/SSS.png)
-*Figure: Full simulation setup — the ATmega32 multiplexing the 6-digit display, with the keypad and control buttons wired on the same board.*
+_Figure: Full simulation setup — the ATmega32 multiplexing the 6-digit display, with the keypad and control buttons wired on the same board._
 
 Confirmed behavior:
 
@@ -192,19 +192,19 @@ Confirmed behavior:
 
 To validate the receive path and display formatting independently of the sensor board's actual measurements, single bytes were injected manually over a virtual COM port:
 
-| Test case | Byte sent | Expected | Result |
-|---|---|---|---|
-| Celsius reply | `0x19` (25) | `25` with `C` glyph | ✅ Confirmed |
-| Fahrenheit reply | `0x4D` (77) | `77` with `F` glyph | ✅ Confirmed |
-| Humidity reply | `0x3C` (60) | `60` with `H` glyph | ✅ Confirmed |
-| Negative reply | `0xFB` (−5) | Minus sign + `5` + unit glyph | ✅ Confirmed |
+| Test case           | Byte sent   | Expected                                                  | Result       |
+| ------------------- | ----------- | --------------------------------------------------------- | ------------ |
+| Celsius reply       | `0x19` (25) | `25` with `C` glyph                                       | ✅ Confirmed |
+| Fahrenheit reply    | `0x4D` (77) | `77` with `F` glyph                                       | ✅ Confirmed |
+| Humidity reply      | `0x3C` (60) | `60` with `H` glyph                                       | ✅ Confirmed |
+| Negative reply      | `0xFB` (−5) | Minus sign + `5` + unit glyph                             | ✅ Confirmed |
 | Variable inspection | `0x19` (25) | `current_temp == 0x19`, `display_buf` matches glyph table | ✅ Confirmed |
 
 ![Manual UART test in Celsius mode](assets/figures/c.png)
-*Figure: `0x19` injected as the Celsius reply — displayed as `25` with the `C` unit glyph.*
+_Figure: `0x19` injected as the Celsius reply — displayed as `25` with the `C` unit glyph._
 
 ![Direct variable inspection in Proteus](assets/figures/dr.png)
-*Figure: Proteus variable viewer confirming `current_temp = 0x19` and `display_buf = {BLANK, 2, 5, BLANK, BLANK, CHAR_C}` — validating the receive-and-format pipeline independently of the physical (one-digit-at-a-time) display rendering.*
+_Figure: Proteus variable viewer confirming `current_temp = 0x19` and `display_buf = {BLANK, 2, 5, BLANK, BLANK, CHAR_C}` — validating the receive-and-format pipeline independently of the physical (one-digit-at-a-time) display rendering._
 
 Additional screenshots (Fahrenheit, humidity, and negative-value tests) are collected in **[docs/experiments.md](docs/experiments.md)**.
 
@@ -216,16 +216,20 @@ Alongside the Proteus simulation, this project now includes a **cycle-accurate i
 
 > Built with **HTML / CSS / JavaScript** using a Vibe Coding (AI-assisted) workflow. The simulator reads no external dependencies; open `index.html` and it runs.
 
-[![Live Demo](https://img.shields.io/badge/demo-github_pages-blue?style=flat-square)](#) *(GitHub Pages link — coming soon)*
+## Interactive Simulator
+
+[![Live Demo](https://img.shields.io/badge/demo-live-blue?style=flat-square)](https://mohsensafari83.github.io/atmega32-multiplexed-clock-envmonitor/)
+
+Explore the AVR system architecture, firmware workflow, Timer2 multiplexing, UART communication, and runtime behavior through an interactive browser-based simulator.
 
 ### Purpose & Philosophy
 
 The simulator is designed as an **interactive documentation layer** that sits alongside the real AVR firmware (`main.c`) and the Proteus simulation model. It does **not** replace either:
 
 - **Proteus** validates the circuit-level behavior (timing, voltage levels, signal integrity).
-- **The web simulator** visualizes the *logical* architecture, data flow, and firmware workflow at a level that is easier to explore and experiment with interactively.
+- **The web simulator** visualizes the _logical_ architecture, data flow, and firmware workflow at a level that is easier to explore and experiment with interactively.
 
-Open the simulator to understand *how* the system works, then read `main.c` or the Proteus model to see *exactly* how it is implemented.
+Open the simulator to understand _how_ the system works, then read `main.c` or the Proteus model to see _exactly_ how it is implemented.
 
 ### How to Use
 
@@ -253,32 +257,36 @@ The browser interface is organized into 8 interactive panels, accessible via the
 ---
 
 #### 1 — System Architecture Overview
+
 ![Screenshot placeholder — Block diagram with highlighted component](assets/figures/sim-s1.png)  
-*Figure: Interactive SVG block diagram. Click any component — MCU, timer, port, sensor — to see its pins, firmware module, and data flow highlighted.*
+_Figure: Interactive SVG block diagram. Click any component — MCU, timer, port, sensor — to see its pins, firmware module, and data flow highlighted._
 
 The full system block diagram rendered as an SVG. Every block is clickable; selecting a component opens a detail panel with its purpose, pin assignments, the C functions that drive it, and the data path through the system.
 
 ---
 
 #### 2 — Firmware Architecture
+
 ![Screenshot placeholder — Firmware layers with selected module detail](assets/figures/sim-s2.png)  
-*Figure: Three-layer software hierarchy. Click any module to inspect its functions, files, and data flow.*
+_Figure: Three-layer software hierarchy. Click any module to inspect its functions, files, and data flow._
 
 The firmware decomposed into Application layer (Display Manager, Sensor Manager, State Machine), HAL layer (UART Driver, Timer Driver, GPIO Driver), and Hardware. Each layer is independently selectable.
 
 ---
 
 #### 3 — Runtime Workflow / State Machine
+
 ![Screenshot placeholder — Animated workflow with Play/Step controls](assets/figures/sim-s3.png)  
-*Figure: 10-step animated boot and runtime workflow. Play to watch the system start, or step through each phase.*
+_Figure: 10-step animated boot and runtime workflow. Play to watch the system start, or step through each phase._
 
 Walks through the system lifecycle: Power-On Reset → Port Init → Timer1/Timer2 Configuration → UART & Interrupt Setup → `sei()` → Multiplexing Start → Mode Cycling → Edit Toggle → UART Polling. Each step shows the C function responsible and a detailed explanation.
 
 ---
 
 #### 4 — Live 7-Segment Display & Debug Panel
+
 ![Screenshot placeholder — Multiplexed display with debug values](assets/figures/sim-s4.png)  
-*Figure: Live simulated display driven by the virtual Timer2 ISR, alongside a full AVR timing debug panel.*
+_Figure: Live simulated display driven by the virtual Timer2 ISR, alongside a full AVR timing debug panel._
 
 **Left:** A real-time 7-segment display showing the current mode (TIME/TEMP/FAHR/HUM) with colon blink and edit cursor blink. Control buttons allow mode cycling, edit toggle, and keypad simulation.  
 **Right:** The AVR timing debug panel showing live values: CPU cycles, Timer2 `TCNT2`, `OCR2`, ISR count and measured frequency (should read ~500 Hz at 1× speed), heartbeat counter, refresh progress, and blink tick.
@@ -286,32 +294,36 @@ Walks through the system lifecycle: Power-On Reset → Port Init → Timer1/Time
 ---
 
 #### 5 — UART Communication Visualizer
+
 ![Screenshot placeholder — UART transaction with frame bits](assets/figures/sim-s5.png)  
-*Figure: Interactive UART transaction viewer. Send C/F/H commands and watch the 10-bit frame animate.*
+_Figure: Interactive UART transaction viewer. Send C/F/H commands and watch the 10-bit frame animate._
 
 Shows the request/response protocol byte-by-byte. Click "Send 'C'" to see the TX frame (start bit + 8 data bits + stop bit) at 9600 baud, followed by the simulated sensor reply and RX frame. Also includes the UART register configuration table (UBRR, UCSRB, UCSRC).
 
 ---
 
 #### 6 — MCU Register View
+
 ![Screenshot placeholder — Register grid with bit-field detail](assets/figures/sim-s6.png)  
-*Figure: Grid of 19 MCU registers with bit-level visualization. Click any register to see its fields and firmware usage.*
+_Figure: Grid of 19 MCU registers with bit-level visualization. Click any register to see its fields and firmware usage._
 
 Displays all configured registers: DDRA–D, PORTA–D, TCCR1B, OCR1AH/L, TCCR2, OCR2, TIMSK, UBRRL, UCSRB/C, MCUCR, GICR. Each register shows its address, current value, and an 8-bit visual bit-field grid. Clicking a register expands a detail view with bit-by-bit explanations.
 
 ---
 
 #### 7 — Hardware Signal Flow
+
 ![Screenshot placeholder — Animated data path through the system](assets/figures/sim-s7.png)  
-*Figure: Animated signal path from the sensor through the MCU to the display.*
+_Figure: Animated signal path from the sensor through the MCU to the display._
 
 A particle-animated pipeline showing how data flows: Sensor → Signal Conditioning → MCU Input Capture → ISR Processing → Display Output. Each stage is annotated with its latency and function.
 
 ---
 
 #### 8 — Execution Trace / Timeline
+
 ![Screenshot placeholder — Real-time event log](assets/figures/sim-s8.png)  
-*Figure: System event log showing boot sequence, ISR events, and runtime actions in real time.*
+_Figure: System event log showing boot sequence, ISR events, and runtime actions in real time._
 
 A scrolling event log that captures all system events: boot initialization steps, Timer2 ISR ticks, UART transactions, mode changes, and edit events. Entries are timestamped and color-coded by type.
 
@@ -319,13 +331,13 @@ A scrolling event log that captures all system events: boot initialization steps
 
 A speed slider in the status bar lets you run the virtual AVR at:
 
-| Speed | Effect |
-|-------|--------|
-| **0.5×** | Half-speed — watch multiplexing details at leisure |
-| **1×** | Real-time — exactly matches the real ATmega32 @ 8 MHz |
-| **2×** | Double-speed — speeds up clock and display |
-| **10×** | Fast-forward — useful for observing long-term behavior |
-| **50×** | Maximum speed — verify hour rollover and polling cadence |
+| Speed    | Effect                                                   |
+| -------- | -------------------------------------------------------- |
+| **0.5×** | Half-speed — watch multiplexing details at leisure       |
+| **1×**   | Real-time — exactly matches the real ATmega32 @ 8 MHz    |
+| **2×**   | Double-speed — speeds up clock and display               |
+| **10×**  | Fast-forward — useful for observing long-term behavior   |
+| **50×**  | Maximum speed — verify hour rollover and polling cadence |
 
 ### Timing Model
 
@@ -339,13 +351,13 @@ The simulator implements a **cycle-accurate virtual AVR clock engine**:
 
 ### Technologies
 
-| Technology | Purpose |
-|---|---|
-| **HTML5** | Document structure and semantic layout |
-| **CSS3** | Dark engineering-theme UI with custom properties |
-| **Vanilla JavaScript** | Cycle-accurate virtual AVR engine, SVG manipulation, `requestAnimationFrame` render loop |
-| **SVG inline** | Block diagrams, 7-segment glyphs, and bit-field visualizations |
-| **Vibe Coding (AI-assisted)** | Rapid development and iteration of the simulator architecture |
+| Technology                    | Purpose                                                                                  |
+| ----------------------------- | ---------------------------------------------------------------------------------------- |
+| **HTML5**                     | Document structure and semantic layout                                                   |
+| **CSS3**                      | Dark engineering-theme UI with custom properties                                         |
+| **Vanilla JavaScript**        | Cycle-accurate virtual AVR engine, SVG manipulation, `requestAnimationFrame` render loop |
+| **SVG inline**                | Block diagrams, 7-segment glyphs, and bit-field visualizations                           |
+| **Vibe Coding (AI-assisted)** | Rapid development and iteration of the simulator architecture                            |
 
 ### Screenshots
 
@@ -374,13 +386,13 @@ Screenshot placeholders (`sim-s1.png` through `sim-s8.png`) are located in [`ass
 
 ## Documentation
 
-| Document | Contents |
-|---|---|
-| [docs/hardware.md](docs/hardware.md) | Full pin mapping table, required components (BOM), circuit schematic, microcontroller peripheral overview |
-| [docs/setup.md](docs/setup.md) | Development toolchain (CodeVisionAVR, Proteus), build target, simulation project layout |
+| Document                                         | Contents                                                                                                                            |
+| ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
+| [docs/hardware.md](docs/hardware.md)             | Full pin mapping table, required components (BOM), circuit schematic, microcontroller peripheral overview                           |
+| [docs/setup.md](docs/setup.md)                   | Development toolchain (CodeVisionAVR, Proteus), build target, simulation project layout                                             |
 | [docs/implementation.md](docs/implementation.md) | Program structure, global variables, all ISR listings, display buffer mechanism, keypad debouncing, timing analysis and derivations |
-| [docs/experiments.md](docs/experiments.md) | Full simulation and UART manual-injection test log with all screenshots |
-| [docs/references.md](docs/references.md) | Datasheets, tool documentation, and course references |
+| [docs/experiments.md](docs/experiments.md)       | Full simulation and UART manual-injection test log with all screenshots                                                             |
+| [docs/references.md](docs/references.md)         | Datasheets, tool documentation, and course references                                                                               |
 
 ## Conclusion & Future Work
 
